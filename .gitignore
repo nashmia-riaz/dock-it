@@ -62,4 +62,4 @@ crashlytics-build.properties
 Assets/google-services.json
 
 # Firebase plugin
-Assets/Firebase/
+Assets/Firebase/*
