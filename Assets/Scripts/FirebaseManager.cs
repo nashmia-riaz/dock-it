@@ -216,6 +216,26 @@ public class FirebaseManager : MonoBehaviour
         });
     }
 
+    public void ResetPassword(string email)
+    {
+        auth.SendPasswordResetEmailAsync(email).ContinueWithOnMainThread(task =>
+        {
+            if (task.IsCanceled)
+            {
+                UIHandler.instance.OnResetPasswordError("Reset password cancelled.");
+                return;
+            }
+            if (task.IsFaulted)
+            {
+                UIHandler.instance.OnResetPasswordError(task.Exception.Message);
+                return;
+            }
+
+            UIHandler.instance.OnResetPasswordSuccess("Password reset email sent successfully");
+            Debug.Log("Email reset succesfully");
+        });
+    }
+
     void FetchLists()
     {
         reference.Child("Lists").GetValueAsync().ContinueWithOnMainThread(task => {

@@ -16,7 +16,7 @@ public class UIHandler : MonoBehaviour
     TMP_InputField emailLogInput, passwordLogInput;
 
     [SerializeField]
-    public Animator LoadingPanel, BlurOverlay, Menu;
+    public Animator LoadingPanel, BlurOverlay, Menu, ResetPasswordPanel;
 
     [SerializeField]
     TMP_Text loadingText, userName;
@@ -37,6 +37,16 @@ public class UIHandler : MonoBehaviour
 
     [SerializeField]
     Sprite checkmarkTick, checkmarkEmpty;
+
+    [SerializeField]
+    TMP_Text forgotPasswordErrorText;
+
+    [SerializeField]
+    TMP_InputField resetPasswordEmail;
+
+    [SerializeField]
+    Color success, fail;
+
     private void Awake()
     {
         if (instance == null)
@@ -76,6 +86,43 @@ public class UIHandler : MonoBehaviour
         string password = passwordLogInput.text;
 
         FirebaseManager.instance.SignInUser(email, password);
+    }
+
+    public void OnShowResetPasswordPanel()
+    {
+        ResetPasswordPanel.gameObject.SetActive(true);
+        ResetPasswordPanel.SetTrigger("FadeIn");
+
+        BlurOverlay.gameObject.SetActive(true);
+    }
+
+    public void OnCloseResetPassword()
+    {
+        ResetPasswordPanel.SetTrigger("FadeOut");
+        BlurOverlay.SetTrigger("FadeOut");
+
+        StartCoroutine(Helper.waitBeforeExecution(0.5f, () => {
+            ResetPasswordPanel.gameObject.SetActive(false);
+            BlurOverlay.gameObject.SetActive(false);
+        }));
+    }
+
+    public void OnClickResetPassword()
+    {
+        string email = resetPasswordEmail.text;
+        FirebaseManager.instance.ResetPassword(email);
+    }
+
+    public void OnResetPasswordError(string error)
+    {
+        forgotPasswordErrorText.color = fail;
+        forgotPasswordErrorText.text = error;
+    }
+
+    public void OnResetPasswordSuccess(string message)
+    {
+        forgotPasswordErrorText.color = success;
+        forgotPasswordErrorText.text = message;
     }
 
     public void SwitchToMainPanel()
