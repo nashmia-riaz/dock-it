@@ -1,6 +1,7 @@
 using Firebase.Database;
 using System.Collections;
 using System.Collections.Generic;
+using System.Net.Mail;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,7 +11,7 @@ public class UIHandler : MonoBehaviour
     public static UIHandler instance;
 
     [SerializeField]
-    TMP_InputField emailRegInput, passwordRegInput1, confirmPasswordInput;
+    TMP_InputField emailRegInput, passwordRegInput1, passwordRegInput2;
 
     [SerializeField]
     TMP_InputField emailLogInput, passwordLogInput;
@@ -23,6 +24,9 @@ public class UIHandler : MonoBehaviour
 
     [SerializeField]
     Transform mainPanel, signinPanel, registerPanel;
+
+    [SerializeField]
+    TMP_Text loginErrorText, registerErrorText;
 
     [SerializeField]
     TMP_InputField ListNameInput;
@@ -71,13 +75,38 @@ public class UIHandler : MonoBehaviour
         loadingText.text = loadingTextString;
     }
 
+    bool ValidateEmail(string email)
+    {
+        bool valid = true;
+
+        try
+        {
+            var emailAddress = new MailAddress(email);
+        }
+        catch
+        {
+            valid = false;
+            OnSignInError("Please enter a valid email.");
+        }
+
+        return valid;
+    }
+
     public void OnClickSignUp()
     {
         string email = emailRegInput.text;
         string password = passwordRegInput1.text;
+        string password2 = passwordRegInput2.text;
+
+        if(password != password2)
+        {
+            OnRegisterError("Passwords don't match.");
+            return;
+        }
+
         LoadingPanelFadeIn("FadeIn");
-        //FirebaseManager.instance.RegisterUser(email, password); //SWAP LATER
-        FirebaseManager.instance.RegisterUser("nash.riaz1995@gmail.com", "nash1995");
+        FirebaseManager.instance.RegisterUser(email, password); //SWAP LATER
+        //FirebaseManager.instance.RegisterUser("nash.riaz1995@gmail.com", "nash1995");
     }
 
     public void OnClickSignIn()
@@ -86,6 +115,20 @@ public class UIHandler : MonoBehaviour
         string password = passwordLogInput.text;
 
         FirebaseManager.instance.SignInUser(email, password);
+    }
+
+    public void OnSignInError(string error)
+    {
+        loginErrorText.gameObject.SetActive(true);
+        loginErrorText.text = error;
+        loginErrorText.color = fail;
+    }
+
+    public void OnRegisterError(string error)
+    {
+        registerErrorText.gameObject.SetActive(true);
+        registerErrorText.text = error;
+        registerErrorText.color = fail;
     }
 
     public void OnShowResetPasswordPanel()

@@ -141,12 +141,12 @@ public class FirebaseManager : MonoBehaviour
         {
             if (task.IsCanceled)
             {
-                Debug.LogError("CreateUserWithEmailAndPasswordAsync was canceled.");
+                UIHandler.instance.OnRegisterError("Could not connect");
                 return;
             }
             if (task.IsFaulted)
             {
-                Debug.LogError("CreateUserWithEmailAndPasswordAsync encountered an error: " + task.Exception);
+                UIHandler.instance.OnRegisterError(task.Exception.InnerException.GetBaseException().Message);
                 return;
             }
 
@@ -169,12 +169,12 @@ public class FirebaseManager : MonoBehaviour
         auth.SignInWithEmailAndPasswordAsync(email, password).ContinueWithOnMainThread(task => {
             if (task.IsCanceled)
             {
-                Debug.LogError("SignInWithEmailAndPasswordAsync was canceled.");
+                UIHandler.instance.OnSignInError("Could not connect");
                 return;
             }
             if (task.IsFaulted)
             {
-                Debug.LogError("SignInWithEmailAndPasswordAsync encountered an error: " + task.Exception);
+                UIHandler.instance.OnSignInError(task.Exception.InnerException.GetBaseException().Message);
                 return;
             }
 
