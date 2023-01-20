@@ -72,7 +72,7 @@ public class FirebaseManager : MonoBehaviour
                             {
                                 Debug.Log("[SIGN IN] Tokens don't match");
                                 
-                                UIHandler.instance.SwitchToLoginPanel();
+                                UIHandler.instance.SwitchToPanel(UIHandler.instance.signinPanel);
                                 UIHandler.instance.LoadingPanelFadeOut();
                             }
                         }
@@ -80,14 +80,14 @@ public class FirebaseManager : MonoBehaviour
                         {
                             Debug.Log("[SIGN IN] Current user is null");
 
-                            UIHandler.instance.SwitchToLoginPanel();
+                            UIHandler.instance.SwitchToPanel(UIHandler.instance.signinPanel);
                             UIHandler.instance.LoadingPanelFadeOut();
                         }
                     });
                 }
                 else
                 {
-                    UIHandler.instance.SwitchToRegisterPanel();
+                    UIHandler.instance.SwitchToPanel(UIHandler.instance.registerPanel);
                     UIHandler.instance.LoadingPanelFadeOut();
                 }
 
@@ -164,8 +164,6 @@ public class FirebaseManager : MonoBehaviour
 
     public void SignInUser(string email, string password)
     {
-        UIHandler.instance.LoadingPanelFadeIn("Signing in...");
-
         auth.SignInWithEmailAndPasswordAsync(email, password).ContinueWithOnMainThread(task => {
             if (task.IsCanceled)
             {
@@ -178,6 +176,7 @@ public class FirebaseManager : MonoBehaviour
                 return;
             }
 
+            UIHandler.instance.LoadingPanelFadeIn("Signing in...");
             FirebaseUser newUser = task.Result;
             Debug.LogFormat("User signed in successfully: {0} ({1})",
                 newUser.DisplayName, newUser.UserId);
@@ -328,7 +327,7 @@ public class FirebaseManager : MonoBehaviour
     {
         Debug.Log("[UI] Switching to main panel");
         UIHandler.instance.UpdateUserName(currentUser.email);
-        UIHandler.instance.SwitchToMainPanel();
+        UIHandler.instance.SwitchToPanel(UIHandler.instance.mainPanel);
         UIHandler.instance.LoadingPanelFadeOut();
     }
 
@@ -434,8 +433,6 @@ public class FirebaseManager : MonoBehaviour
     {
         auth.SignOut();
         PlayerPrefs.DeleteKey("Token");
-        UIHandler.instance.SwitchToLoginPanel();
+        UIHandler.instance.SwitchToPanel(UIHandler.instance.signinPanel);
     }
-
-
 }

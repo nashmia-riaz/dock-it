@@ -22,8 +22,10 @@ public class UIHandler : MonoBehaviour
     [SerializeField]
     TMP_Text loadingText, userName;
 
+    public Transform mainPanel, signinPanel, registerPanel;
+
     [SerializeField]
-    Transform mainPanel, signinPanel, registerPanel;
+    Transform currentPanel;
 
     [SerializeField]
     TMP_Text loginErrorText, registerErrorText;
@@ -62,6 +64,8 @@ public class UIHandler : MonoBehaviour
         {
             Destroy(this);
         }
+
+        //currentPanel = signinPanel;
     }
 
     public void LoadingPanelFadeOut()
@@ -73,23 +77,6 @@ public class UIHandler : MonoBehaviour
     {
         LoadingPanel.SetTrigger("FadeIn");
         loadingText.text = loadingTextString;
-    }
-
-    bool ValidateEmail(string email)
-    {
-        bool valid = true;
-
-        try
-        {
-            var emailAddress = new MailAddress(email);
-        }
-        catch
-        {
-            valid = false;
-            OnSignInError("Please enter a valid email.");
-        }
-
-        return valid;
     }
 
     public void OnClickSignUp()
@@ -113,6 +100,8 @@ public class UIHandler : MonoBehaviour
     {
         string email = emailLogInput.text;
         string password = passwordLogInput.text;
+
+        //if(emaill == null || password == null)
 
         FirebaseManager.instance.SignInUser(email, password);
     }
@@ -168,47 +157,29 @@ public class UIHandler : MonoBehaviour
         forgotPasswordErrorText.text = message;
     }
 
-    public void SwitchToMainPanel()
+    public void SwitchToPanel(Transform nextPanel)
     {
-        mainPanel.gameObject.SetActive(true);
-        signinPanel.gameObject.SetActive(false);
-        registerPanel.gameObject.SetActive(false);
-    }
+        Animator currentPanelAnimator, nextPanelAnimator;
+        nextPanelAnimator = nextPanel.GetComponent<Animator>();
 
-    public void SwitchToRegisterFromLogin()
-    {
-        signinPanel.GetComponent<Animator>().SetTrigger("FadeOut");
-        StartCoroutine(Helper.waitBeforeExecution(0.5f, () => {
-            signinPanel.gameObject.SetActive(false);
+        if (currentPanel != null)
+        {
+            currentPanelAnimator = currentPanel.GetComponent<Animator>();
+            if (currentPanelAnimator)
+                currentPanelAnimator.SetTrigger("FadeOut");
+        }
 
-            registerPanel.gameObject.SetActive(true);
-            registerPanel.GetComponent<Animator>().SetTrigger("FadeIn");
+        StartCoroutine(Helper.waitBeforeExecution(0.3f, () => {
+            //if(currentPanel != null)
+            //    currentPanel.gameObject.SetActive(false);
+
+            nextPanel.gameObject.SetActive(true);
+
+            if(nextPanelAnimator != null)
+                nextPanelAnimator.SetTrigger("FadeIn");
         }));
 
-    }
-
-    public void SwitchToLoginFromRegister()
-    {
-        registerPanel.GetComponent<Animator>().SetTrigger("FadeOut");
-        StartCoroutine(Helper.waitBeforeExecution(0.5f, () => {
-            registerPanel.gameObject.SetActive(false);
-
-            signinPanel.gameObject.SetActive(true);
-            signinPanel.GetComponent<Animator>().SetTrigger("FadeIn");
-        }));
-    }
-
-    public void SwitchToRegisterPanel()
-    {
-        mainPanel.gameObject.SetActive(false);
-        signinPanel.gameObject.SetActive(false);
-        registerPanel.gameObject.SetActive(true);
-    }
-    public void SwitchToLoginPanel()
-    {
-        mainPanel.gameObject.SetActive(false);
-        signinPanel.gameObject.SetActive(true);
-        registerPanel.gameObject.SetActive(false);
+        currentPanel = nextPanel;
     }
 
     public string GetListName()
