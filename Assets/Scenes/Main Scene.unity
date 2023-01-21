@@ -3942,7 +3942,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0.00072199974, y: 0.0009076249}
-  m_SizeDelta: {x: 0, y: 300}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &564952864
 MonoBehaviour:
@@ -7057,7 +7057,7 @@ MonoBehaviour:
   currentPanel: {fileID: 1549401032}
   loginErrorText: {fileID: 1770059499}
   registerErrorText: {fileID: 1865897781}
-  ListNameInput: {fileID: 0}
+  ListNameInput: {fileID: 1204714086}
   ListScrollView: {fileID: 1784706579}
   ListItemPrefab: {fileID: 6745420196843738064, guid: d3175e9af6bb3f64ca45837e781a44fd, type: 3}
   ListNamePrefab: {fileID: 7940560765821395019, guid: 2bb071c3ed592564cabc6abbcd657135, type: 3}
@@ -8398,7 +8398,19 @@ MonoBehaviour:
   m_CharacterLimit: 0
   m_OnEndEdit:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1069494387}
+        m_TargetAssemblyTypeName: UIHandler, Assembly-CSharp
+        m_MethodName: OnUpdateCurrentListName
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   m_OnSubmit:
     m_PersistentCalls:
       m_Calls: []
@@ -10161,7 +10173,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 219.6385, y: -18.8005}
+  m_AnchoredPosition: {x: 219.6385, y: -18.800499}
   m_SizeDelta: {x: 439.277, y: 37.601}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1543626906
@@ -12296,7 +12308,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 219.6385, y: -18.8005}
+  m_AnchoredPosition: {x: 219.6385, y: -18.800499}
   m_SizeDelta: {x: 439.277, y: 37.601}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1938620445

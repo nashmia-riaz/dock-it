@@ -311,4 +311,27 @@ public class UIHandler : MonoBehaviour
     {
         FirebaseManager.instance.OnLogout();
     }
+
+    public void OnUpdateCurrentListName()
+    {
+        string newName = ListNameInput.text;
+
+        if(newName != null && newName != "")
+            FirebaseManager.instance.UpdateListName(newName);
+    }
+
+    public void UpdateListNameInScrollview(string key, string name)
+    {
+        for(int i = 0; i < ListNameScrollView.transform.childCount; i++)
+        {
+            Transform childName = ListNameScrollView.transform.GetChild(i);
+            if (childName.name == key)
+                childName.Find("List Name").GetComponent<TMP_Text>().text = name;
+        }
+    }
+
+    public void UpdateListNameCurrent(string name)
+    {
+        ListNameInput.text = name;
+    }
 }
