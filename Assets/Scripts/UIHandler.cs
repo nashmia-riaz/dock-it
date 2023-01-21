@@ -1,6 +1,7 @@
 using Firebase.Database;
 using System.Collections;
 using System.Collections.Generic;
+using System.Net.Mail;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,19 +11,24 @@ public class UIHandler : MonoBehaviour
     public static UIHandler instance;
 
     [SerializeField]
-    TMP_InputField emailRegInput, passwordRegInput1, confirmPasswordInput;
+    TMP_InputField emailRegInput, passwordRegInput1, passwordRegInput2;
 
     [SerializeField]
     TMP_InputField emailLogInput, passwordLogInput;
 
     [SerializeField]
-    public Animator LoadingPanel, BlurOverlay, Menu;
+    public Animator LoadingPanel, BlurOverlay, Menu, ResetPasswordPanel;
 
     [SerializeField]
     TMP_Text loadingText, userName;
 
+    public Transform mainPanel, signinPanel, registerPanel;
+
     [SerializeField]
-    Transform mainPanel, signinPanel, registerPanel;
+    Transform currentPanel;
+
+    [SerializeField]
+    TMP_Text loginErrorText, registerErrorText;
 
     [SerializeField]
     TMP_InputField ListNameInput;
@@ -37,6 +43,16 @@ public class UIHandler : MonoBehaviour
 
     [SerializeField]
     Sprite checkmarkTick, checkmarkEmpty;
+
+    [SerializeField]
+    TMP_Text forgotPasswordErrorText;
+
+    [SerializeField]
+    TMP_InputField resetPasswordEmail;
+
+    [SerializeField]
+    Color success, fail;
+
     private void Awake()
     {
         if (instance == null)
@@ -48,6 +64,8 @@ public class UIHandler : MonoBehaviour
         {
             Destroy(this);
         }
+
+        //currentPanel = signinPanel;
     }
 
     public void LoadingPanelFadeOut()
@@ -65,9 +83,17 @@ public class UIHandler : MonoBehaviour
     {
         string email = emailRegInput.text;
         string password = passwordRegInput1.text;
+        string password2 = passwordRegInput2.text;
+
+        if(password != password2)
+        {
+            OnRegisterError("Passwords don't match.");
+            return;
+        }
+
         LoadingPanelFadeIn("FadeIn");
-        //FirebaseManager.instance.RegisterUser(email, password); //SWAP LATER
-        FirebaseManager.instance.RegisterUser("nash.riaz1995@gmail.com", "nash1995");
+        FirebaseManager.instance.RegisterUser(email, password); //SWAP LATER
+        //FirebaseManager.instance.RegisterUser("nash.riaz1995@gmail.com", "nash1995");
     }
 
     public void OnClickSignIn()
@@ -75,50 +101,85 @@ public class UIHandler : MonoBehaviour
         string email = emailLogInput.text;
         string password = passwordLogInput.text;
 
+        //if(emaill == null || password == null)
+
         FirebaseManager.instance.SignInUser(email, password);
     }
 
-    public void SwitchToMainPanel()
+    public void OnSignInError(string error)
     {
-        mainPanel.gameObject.SetActive(true);
-        signinPanel.gameObject.SetActive(false);
-        registerPanel.gameObject.SetActive(false);
+        loginErrorText.gameObject.SetActive(true);
+        loginErrorText.text = error;
+        loginErrorText.color = fail;
     }
 
-    public void SwitchToRegisterFromLogin()
+    public void OnRegisterError(string error)
     {
-        signinPanel.GetComponent<Animator>().SetTrigger("FadeOut");
-        StartCoroutine(Helper.waitBeforeExecution(0.5f, () => {
-            signinPanel.gameObject.SetActive(false);
+        registerErrorText.gameObject.SetActive(true);
+        registerErrorText.text = error;
+        registerErrorText.color = fail;
+    }
 
-            registerPanel.gameObject.SetActive(true);
-            registerPanel.GetComponent<Animator>().SetTrigger("FadeIn");
+    public void OnShowResetPasswordPanel()
+    {
+        ResetPasswordPanel.gameObject.SetActive(true);
+        ResetPasswordPanel.SetTrigger("FadeIn");
+
+        BlurOverlay.gameObject.SetActive(true);
+    }
+
+    public void OnCloseResetPassword()
+    {
+        ResetPasswordPanel.SetTrigger("FadeOut");
+        BlurOverlay.SetTrigger("FadeOut");
+
+        StartCoroutine(Helper.waitBeforeExecution(0.5f, () => {
+            ResetPasswordPanel.gameObject.SetActive(false);
+            BlurOverlay.gameObject.SetActive(false);
+        }));
+    }
+
+    public void OnClickResetPassword()
+    {
+        string email = resetPasswordEmail.text;
+        FirebaseManager.instance.ResetPassword(email);
+    }
+
+    public void OnResetPasswordError(string error)
+    {
+        forgotPasswordErrorText.color = fail;
+        forgotPasswordErrorText.text = error;
+    }
+
+    public void OnResetPasswordSuccess(string message)
+    {
+        forgotPasswordErrorText.color = success;
+        forgotPasswordErrorText.text = message;
+    }
+
+    public void SwitchToPanel(Transform nextPanel)
+    {
+        Animator currentPanelAnimator, nextPanelAnimator;
+        nextPanelAnimator = nextPanel.GetComponent<Animator>();
+
+        if (currentPanel != null)
+        {
+            currentPanelAnimator = currentPanel.GetComponent<Animator>();
+            if (currentPanelAnimator)
+                currentPanelAnimator.SetTrigger("FadeOut");
+        }
+
+        StartCoroutine(Helper.waitBeforeExecution(0.3f, () => {
+            //if(currentPanel != null)
+            //    currentPanel.gameObject.SetActive(false);
+
+            nextPanel.gameObject.SetActive(true);
+
+            if(nextPanelAnimator != null)
+                nextPanelAnimator.SetTrigger("FadeIn");
         }));
 
-    }
-
-    public void SwitchToLoginFromRegister()
-    {
-        registerPanel.GetComponent<Animator>().SetTrigger("FadeOut");
-        StartCoroutine(Helper.waitBeforeExecution(0.5f, () => {
-            registerPanel.gameObject.SetActive(false);
-
-            signinPanel.gameObject.SetActive(true);
-            signinPanel.GetComponent<Animator>().SetTrigger("FadeIn");
-        }));
-    }
-
-    public void SwitchToRegisterPanel()
-    {
-        mainPanel.gameObject.SetActive(false);
-        signinPanel.gameObject.SetActive(false);
-        registerPanel.gameObject.SetActive(true);
-    }
-    public void SwitchToLoginPanel()
-    {
-        mainPanel.gameObject.SetActive(false);
-        signinPanel.gameObject.SetActive(true);
-        registerPanel.gameObject.SetActive(false);
+        currentPanel = nextPanel;
     }
 
     public string GetListName()

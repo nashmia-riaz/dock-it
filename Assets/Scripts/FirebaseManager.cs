@@ -72,7 +72,7 @@ public class FirebaseManager : MonoBehaviour
                             {
                                 Debug.Log("[SIGN IN] Tokens don't match");
                                 
-                                UIHandler.instance.SwitchToLoginPanel();
+                                UIHandler.instance.SwitchToPanel(UIHandler.instance.signinPanel);
                                 UIHandler.instance.LoadingPanelFadeOut();
                             }
                         }
@@ -80,14 +80,14 @@ public class FirebaseManager : MonoBehaviour
                         {
                             Debug.Log("[SIGN IN] Current user is null");
 
-                            UIHandler.instance.SwitchToLoginPanel();
+                            UIHandler.instance.SwitchToPanel(UIHandler.instance.signinPanel);
                             UIHandler.instance.LoadingPanelFadeOut();
                         }
                     });
                 }
                 else
                 {
-                    UIHandler.instance.SwitchToRegisterPanel();
+                    UIHandler.instance.SwitchToPanel(UIHandler.instance.registerPanel);
                     UIHandler.instance.LoadingPanelFadeOut();
                 }
 
@@ -141,12 +141,14 @@ public class FirebaseManager : MonoBehaviour
         {
             if (task.IsCanceled)
             {
-                Debug.LogError("CreateUserWithEmailAndPasswordAsync was canceled.");
+                UIHandler.instance.OnRegisterError("Could not connect");
+                UIHandler.instance.LoadingPanelFadeOut();
                 return;
             }
             if (task.IsFaulted)
             {
-                Debug.LogError("CreateUserWithEmailAndPasswordAsync encountered an error: " + task.Exception);
+                UIHandler.instance.OnRegisterError(task.Exception.InnerException.GetBaseException().Message);
+                UIHandler.instance.LoadingPanelFadeOut();
                 return;
             }
 
@@ -165,16 +167,17 @@ public class FirebaseManager : MonoBehaviour
     public void SignInUser(string email, string password)
     {
         UIHandler.instance.LoadingPanelFadeIn("Signing in...");
-
         auth.SignInWithEmailAndPasswordAsync(email, password).ContinueWithOnMainThread(task => {
             if (task.IsCanceled)
             {
-                Debug.LogError("SignInWithEmailAndPasswordAsync was canceled.");
+                UIHandler.instance.OnSignInError("Could not connect");
+                UIHandler.instance.LoadingPanelFadeOut();
                 return;
             }
             if (task.IsFaulted)
             {
-                Debug.LogError("SignInWithEmailAndPasswordAsync encountered an error: " + task.Exception);
+                UIHandler.instance.OnSignInError(task.Exception.InnerException.GetBaseException().Message);
+                UIHandler.instance.LoadingPanelFadeOut();
                 return;
             }
 
@@ -213,6 +216,26 @@ public class FirebaseManager : MonoBehaviour
                 //OnAutoSignIn();
                 FetchLists();
 
+        });
+    }
+
+    public void ResetPassword(string email)
+    {
+        auth.SendPasswordResetEmailAsync(email).ContinueWithOnMainThread(task =>
+        {
+            if (task.IsCanceled)
+            {
+                UIHandler.instance.OnResetPasswordError("Reset password cancelled.");
+                return;
+            }
+            if (task.IsFaulted)
+            {
+                UIHandler.instance.OnResetPasswordError(task.Exception.Message);
+                return;
+            }
+
+            UIHandler.instance.OnResetPasswordSuccess("Password reset email sent successfully");
+            Debug.Log("Email reset succesfully");
         });
     }
 
@@ -262,18 +285,6 @@ public class FirebaseManager : MonoBehaviour
         List newList = new List(list.Child("Name").Value.ToString());
         newList.Id = list.Key;
 
-        //Items handling done in Listmanager.Additem
-
-        //IEnumerable<DataSnapshot> Items = list.Child("Items").Children;
-        //foreach (var item in Items)
-        //{
-        //    Item newItem = new Item(item.Child("task").Value.ToString(),
-        //        item.Child("checkmark").Value.ToString() == "true",
-        //        item.Child("id").Value.ToString());
-
-        //    newList.AddItem(newItem);
-        //}
-
         IEnumerable<DataSnapshot> usersAccessForList = list.Child("UsersAccess").Children;
         foreach (var userID in usersAccessForList)
         {
@@ -308,7 +319,7 @@ public class FirebaseManager : MonoBehaviour
     {
         Debug.Log("[UI] Switching to main panel");
         UIHandler.instance.UpdateUserName(currentUser.email);
-        UIHandler.instance.SwitchToMainPanel();
+        UIHandler.instance.SwitchToPanel(UIHandler.instance.mainPanel);
         UIHandler.instance.LoadingPanelFadeOut();
     }
 
@@ -414,8 +425,6 @@ public class FirebaseManager : MonoBehaviour
     {
         auth.SignOut();
         PlayerPrefs.DeleteKey("Token");
-        UIHandler.instance.SwitchToLoginPanel();
+        UIHandler.instance.SwitchToPanel(UIHandler.instance.signinPanel);
     }
-
-
 }
