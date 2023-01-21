@@ -292,10 +292,56 @@ public class FirebaseManager : MonoBehaviour
             newList.AddUserAccess(userIDString);
         }
 
-        var firebaseRef = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(list.Key).Child("Items");
-        firebaseRef.ChildAdded += HandleItemAdded;
+        var refItems = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(list.Key).Child("Items");
+        refItems.ChildAdded += HandleItemAdded;
+
+        var refListName = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(list.Key);
+        refListName.ChildChanged += HandleListUpdate;
 
         ListManager.instance.AllLists.Add(newList);
+    }
+
+    void HandleListUpdate(object sender, ChildChangedEventArgs args)
+    {
+        if (args.DatabaseError != null)
+        {
+            Debug.LogError(args.DatabaseError.Message);
+            return;
+        }
+
+        string newName = args.Snapshot.Value.ToString();
+        string listKey = args.Snapshot.Reference.Parent.Key;
+
+        Debug.LogFormat("[LIST] NAME UPDATED {0} {1}", newName, listKey);
+
+        ListManager.instance.UpdateListName(listKey, newName);
+    }
+
+    public void UpdateListName(string newName)
+    {
+        string listKey = ListManager.instance.currentList.Id;
+        Debug.LogFormat("Updating List Name {0} {1}",newName, listKey);
+
+        if (listKey == null) return;
+
+        reference.Child("Lists").Child(listKey).Child("Name").
+            SetValueAsync(newName).ContinueWithOnMainThread(task =>
+            {
+                if (task.IsCanceled)
+                {
+                    Debug.LogError("Task cancelled");
+                    return;
+                }
+                if (task.IsFaulted)
+                {
+                    Debug.LogError("Error writing data " + task.Exception);
+                    return;
+                }
+
+                Debug.LogFormat("[LIST] List Name Update Complete {0} {1} {2}" ,task.IsCompleted, newName, listKey);
+                UIHandler.instance.UpdateListNameInScrollview(listKey, newName);
+            });
+
     }
 
     void HandleItemAdded(object sender, ChildChangedEventArgs args)

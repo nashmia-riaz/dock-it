@@ -46,6 +46,7 @@ public class ListManager : MonoBehaviour
                 {
                     Debug.LogFormat("[LIST MANAGER] List found with ID {0}", list.Id);
                     this.currentList = list;
+                    UIHandler.instance.UpdateListNameCurrent(list.Name);
                     return;
                 }
             }
@@ -56,6 +57,7 @@ public class ListManager : MonoBehaviour
         {
             currentList = AllLists[0];
             PlayerPrefs.SetString("CurrentList", currentList.Id);
+            UIHandler.instance.UpdateListNameCurrent(currentList.Name);
             Debug.Log("[LIST MANAGER] No list found. Setting to first");
         }
     }
@@ -87,6 +89,23 @@ public class ListManager : MonoBehaviour
         if (list == currentList)
         {
             UIHandler.instance.AddItem(item, itemKey);
+        }
+    }
+
+    public void UpdateListName(string listKey, string listName)
+    {
+        if (listKey == null || listName == null)
+            return;
+
+        List list = FindListUsingKey(listKey);
+        if (list == null) return;
+
+        list.Name = listName;
+        UIHandler.instance.UpdateListNameInScrollview(listKey, listName);
+
+        if (list == currentList)
+        {
+            UIHandler.instance.UpdateListNameCurrent(listName);
         }
     }
 }
