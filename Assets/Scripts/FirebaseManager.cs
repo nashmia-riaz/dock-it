@@ -142,11 +142,13 @@ public class FirebaseManager : MonoBehaviour
             if (task.IsCanceled)
             {
                 UIHandler.instance.OnRegisterError("Could not connect");
+                UIHandler.instance.LoadingPanelFadeOut();
                 return;
             }
             if (task.IsFaulted)
             {
                 UIHandler.instance.OnRegisterError(task.Exception.InnerException.GetBaseException().Message);
+                UIHandler.instance.LoadingPanelFadeOut();
                 return;
             }
 
@@ -164,19 +166,21 @@ public class FirebaseManager : MonoBehaviour
 
     public void SignInUser(string email, string password)
     {
+        UIHandler.instance.LoadingPanelFadeIn("Signing in...");
         auth.SignInWithEmailAndPasswordAsync(email, password).ContinueWithOnMainThread(task => {
             if (task.IsCanceled)
             {
                 UIHandler.instance.OnSignInError("Could not connect");
+                UIHandler.instance.LoadingPanelFadeOut();
                 return;
             }
             if (task.IsFaulted)
             {
                 UIHandler.instance.OnSignInError(task.Exception.InnerException.GetBaseException().Message);
+                UIHandler.instance.LoadingPanelFadeOut();
                 return;
             }
 
-            UIHandler.instance.LoadingPanelFadeIn("Signing in...");
             FirebaseUser newUser = task.Result;
             Debug.LogFormat("User signed in successfully: {0} ({1})",
                 newUser.DisplayName, newUser.UserId);
@@ -280,18 +284,6 @@ public class FirebaseManager : MonoBehaviour
     {
         List newList = new List(list.Child("Name").Value.ToString());
         newList.Id = list.Key;
-
-        //Items handling done in Listmanager.Additem
-
-        //IEnumerable<DataSnapshot> Items = list.Child("Items").Children;
-        //foreach (var item in Items)
-        //{
-        //    Item newItem = new Item(item.Child("task").Value.ToString(),
-        //        item.Child("checkmark").Value.ToString() == "true",
-        //        item.Child("id").Value.ToString());
-
-        //    newList.AddItem(newItem);
-        //}
 
         IEnumerable<DataSnapshot> usersAccessForList = list.Child("UsersAccess").Children;
         foreach (var userID in usersAccessForList)
