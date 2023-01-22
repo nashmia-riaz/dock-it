@@ -19,6 +19,9 @@ public class FirebaseManager : MonoBehaviour
     [SerializeField]
     User currentUser;
 
+    [SerializeField]
+    bool listItemsInitialized;
+
     private void Awake()
     {
         if (instance == null)
@@ -30,6 +33,8 @@ public class FirebaseManager : MonoBehaviour
         {
             Destroy(this);
         }
+
+        listItemsInitialized = false;
     }
 
     void Initialize()
@@ -271,7 +276,9 @@ public class FirebaseManager : MonoBehaviour
                 if (ListManager.instance.AllLists.Count <= 0)
                     CreateEmptyList();
                 else
+                {
                     UIHandler.instance.LoadLists();
+                }
 
                 Debug.Log("[LISTS] Fetched lists");
                 //UIHandler.instance.LoadCurrentList();
@@ -292,10 +299,13 @@ public class FirebaseManager : MonoBehaviour
             newList.AddUserAccess(userIDString);
         }
 
-        var refItems = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(list.Key).Child("Items");
-        refItems.ChildAdded += HandleItemAdded;
-        refItems.ChildChanged += HandleItemChanged;
-
+        if (!listItemsInitialized)
+        {
+            var refItems = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(list.Key).Child("Items");
+            refItems.ChildAdded += HandleItemAdded;
+            refItems.ChildChanged += HandleItemChanged;
+            listItemsInitialized = true;
+        }
         var refListName = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(list.Key);
         refListName.ChildChanged += HandleListUpdate;
 
@@ -529,9 +539,13 @@ public class FirebaseManager : MonoBehaviour
                     return;
                 }
 
-                var refItems = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(ListManager.instance.currentList.Id).Child("Items");
-                refItems.ChildAdded += HandleItemAdded;
-                refItems.ChildChanged += HandleItemChanged;
+                if (!listItemsInitialized)
+                {
+                    var refItems = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(ListManager.instance.currentList.Id).Child("Items");
+                    refItems.ChildAdded += HandleItemAdded;
+                    refItems.ChildChanged += HandleItemChanged;
+                    listItemsInitialized = true;
+                }
 
                 Debug.Log("[ITEM] Write Empty Item Successful " + task.IsCompleted);
                 //ListManager.instance.currentList.AddItem(item);
