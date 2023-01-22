@@ -294,6 +294,7 @@ public class FirebaseManager : MonoBehaviour
 
         var refItems = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(list.Key).Child("Items");
         refItems.ChildAdded += HandleItemAdded;
+        refItems.ChildChanged += HandleItemChanged;
 
         var refListName = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(list.Key);
         refListName.ChildChanged += HandleListUpdate;
@@ -309,12 +310,15 @@ public class FirebaseManager : MonoBehaviour
             return;
         }
 
-        string newName = args.Snapshot.Value.ToString();
-        string listKey = args.Snapshot.Reference.Parent.Key;
+        if (args.Snapshot.Key.ToString() == "Name")
+        {
+            string newName = args.Snapshot.Value.ToString();
+            string listKey = args.Snapshot.Reference.Parent.Key;
 
-        Debug.LogFormat("[LIST] NAME UPDATED {0} {1}", newName, listKey);
+            Debug.LogFormat("[LIST] NAME UPDATED {0} {1}", newName, listKey);
 
-        ListManager.instance.UpdateListName(listKey, newName);
+            ListManager.instance.UpdateListName(listKey, newName);
+        }
     }
 
     public void UpdateListName(string newName)
@@ -344,6 +348,50 @@ public class FirebaseManager : MonoBehaviour
 
     }
 
+    public void UpdateItemTask(string itemKey, string task)
+    {
+        reference.Child("Lists").Child(ListManager.instance.currentList.Id).
+            Child("Items").Child(itemKey).Child("task").
+           SetValueAsync(task).ContinueWithOnMainThread(task =>
+           {
+               if (task.IsCanceled)
+               {
+                   Debug.LogError("Task cancelled");
+                   return;
+               }
+               if (task.IsFaulted)
+               {
+                   Debug.LogError("Error writing data " + task.Exception);
+                   return;
+               }
+
+               //update in list as well
+               Debug.LogFormat("[ITEM] Item task updated {0} {1}", itemKey, task.IsCompleted);
+           });
+    }
+
+    public void UpdateItemCheckmark(string itemKey, bool state)
+    {
+        reference.Child("Lists").Child(ListManager.instance.currentList.Id).
+            Child("Items").Child(itemKey).Child("checkmark").
+           SetValueAsync(state).ContinueWithOnMainThread(task =>
+           {
+               if (task.IsCanceled)
+               {
+                   Debug.LogError("Task cancelled");
+                   return;
+               }
+               if (task.IsFaulted)
+               {
+                   Debug.LogError("Error writing data " + task.Exception);
+                   return;
+               }
+
+               //update in list as well
+               Debug.LogFormat("[ITEM] Item checkmark updated {0} {1} {2}", itemKey, state, task.IsCompleted);
+           });
+    }
+
     void HandleItemAdded(object sender, ChildChangedEventArgs args)
     {
         if (args.DatabaseError != null)
@@ -356,9 +404,26 @@ public class FirebaseManager : MonoBehaviour
         string task = args.Snapshot.Child("task").Value.ToString();
         string checkmark = args.Snapshot.Child("checkmark").Value.ToString();
         string id = args.Snapshot.Child("id").Value.ToString();
-        Item newItem = new Item(task, checkmark == "true", id);
+        Item newItem = new Item(task, checkmark == "True", id);
         Debug.Log("New item created " + newItem.id);
         ListManager.instance.AddItemToList(newItem, listKey, id);
+    }
+
+    void HandleItemChanged(object sender, ChildChangedEventArgs args)
+    {
+        if (args.DatabaseError != null)
+        {
+            Debug.LogError(args.DatabaseError.Message);
+            return;
+        }
+
+        string listKey = args.Snapshot.Reference.Parent.Parent.Key;
+        string itemKey = args.Snapshot.Child("id").Value.ToString();
+        string task = args.Snapshot.Child("task").Value.ToString();
+        bool checkmark = args.Snapshot.Child("checkmark").Value.ToString() == "True";
+
+        Item item = new Item(task, checkmark, itemKey);
+        ListManager.instance.UpdateItemInList(listKey, item);
     }
 
     void OnAutoSignIn()
@@ -430,6 +495,8 @@ public class FirebaseManager : MonoBehaviour
 
                 UIHandler.instance.AddList(listName, listKey);
 
+                var refListName = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(listKey);
+                refListName.ChildChanged += HandleListUpdate;
                 CreateEmptyItem();
             });
     }
@@ -462,9 +529,12 @@ public class FirebaseManager : MonoBehaviour
                     return;
                 }
 
+                var refItems = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(ListManager.instance.currentList.Id).Child("Items");
+                refItems.ChildAdded += HandleItemAdded;
+                refItems.ChildChanged += HandleItemChanged;
+
                 Debug.Log("[ITEM] Write Empty Item Successful " + task.IsCompleted);
-                ListManager.instance.currentList.AddItem(item);
-                UIHandler.instance.AddItem(item, itemKey);
+                //ListManager.instance.currentList.AddItem(item);
             });
     }
     public void OnLogout()

@@ -38,6 +38,18 @@ public class List
         _usersAccess.Add(userId);
     }
 
+    public int FindItemIndex(string itemKey)
+    {
+        int index = 0;
+        foreach(Item item in _items)
+        {
+            if (item.id == itemKey)
+                return index;
+            index++;
+        }
+        return -1;
+    }
+
     public string Id { get { return _id; } set { _id = value; } }
 
     public List<string> UsersAccess { get { return _usersAccess; } set { _usersAccess = value; } }

@@ -42,9 +42,6 @@ public class UIHandler : MonoBehaviour
     GameObject ListNamePrefab, ListNameScrollView;
 
     [SerializeField]
-    Sprite checkmarkTick, checkmarkEmpty;
-
-    [SerializeField]
     TMP_Text forgotPasswordErrorText;
 
     [SerializeField]
@@ -52,6 +49,9 @@ public class UIHandler : MonoBehaviour
 
     [SerializeField]
     Color success, fail;
+
+    [SerializeField]
+    Sprite trueCheckmark, emptyCheckmark;
 
     private void Awake()
     {
@@ -198,9 +198,25 @@ public class UIHandler : MonoBehaviour
         listItem.transform.name = itemKey;
         listItem.transform.SetSiblingIndex(listItem.transform.childCount - 2);
 
-        listItem.transform.Find("List Details").Find("Check").GetComponent<Image>().sprite = (item.checkmark == true) ? checkmarkTick : checkmarkEmpty;
-        listItem.transform.Find("List Details").Find("InputField (TMP)").GetComponent<TMP_InputField>().text = item.task;
+        Image checkmark = listItem.transform.Find("List Details").Find("Check").GetComponent<Image>();
+        SetCheckmarkImage(checkmark, item.checkmark);
         
+        Button checkmarkButton = listItem.transform.Find("List Details").Find("Check").GetComponent<Button>();
+        checkmarkButton.onClick.AddListener(() => {
+            OnClickCheckmark(checkmarkButton.gameObject);
+        });
+
+        TMP_InputField task = listItem.transform.Find("List Details").Find("Task").GetComponent<TMP_InputField>();
+        task.onEndEdit.AddListener(delegate { OnEditTask(task); });
+
+        listItem.transform.Find("List Details").Find("Task").GetComponent<TMP_InputField>().text = item.task;
+    }
+
+    public void OnEditTask(TMP_InputField inputField)
+    {
+        string task = inputField.text;
+        string itemKey = inputField.transform.parent.parent.name;
+        FirebaseManager.instance.UpdateItemTask(itemKey, task);
     }
 
     public void AddList(string listName, string listID)
@@ -333,5 +349,55 @@ public class UIHandler : MonoBehaviour
     public void UpdateListNameCurrent(string name)
     {
         ListNameInput.text = name;
+    }
+
+    void SetCheckmarkImage(Image image, bool state)
+    {
+        if (state)
+        {
+            image.sprite = trueCheckmark;
+        }
+        else
+        {
+            image.sprite = emptyCheckmark;
+        }
+    }
+
+    public void UpdateItem(Item item)
+    {
+        //first we find the item transform in view
+        for(int i = 0; i < ListScrollView.childCount; i++)
+        {
+            Transform itemObj = ListScrollView.GetChild(i);
+            if(itemObj.name == item.id)
+            {
+                Image checkmark = itemObj.Find("List Details").Find("Check").GetComponent<Image>();
+                SetCheckmarkImage(checkmark, item.checkmark);
+
+                TMP_InputField task = itemObj.Find("List Details").Find("Task").GetComponent<TMP_InputField>();
+                task.text = item.task;
+
+                break;
+            }
+        }
+    }
+
+    public void OnClickCheckmark(GameObject checkmarkButton)
+    {
+        Image checkmarkImage = checkmarkButton.GetComponent<Image>();
+        bool state;
+
+        if(checkmarkImage.sprite.name == "Checkmark True")
+        {
+            state = false;
+            checkmarkImage.sprite = emptyCheckmark;
+        }
+        else
+        {
+            state = true;
+            checkmarkImage.sprite = trueCheckmark;
+        }
+
+        FirebaseManager.instance.UpdateItemCheckmark(checkmarkImage.transform.parent.parent.name, state);
     }
 }

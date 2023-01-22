@@ -108,4 +108,23 @@ public class ListManager : MonoBehaviour
             UIHandler.instance.UpdateListNameCurrent(listName);
         }
     }
+
+    public void UpdateItemInList(string listKey, Item item)
+    {
+        if (listKey == null || item == null)
+            return;
+
+        List list = FindListUsingKey(listKey);
+        if (list == null) return;
+
+        int itemIndex = list.FindItemIndex(item.id);
+
+        if(itemIndex >= 0)
+        {
+            if (list == currentList)
+                UIHandler.instance.UpdateItem(item);
+
+            list.Items[itemIndex] = item;
+        }
+    }
 }
