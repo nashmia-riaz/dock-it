@@ -7068,6 +7068,8 @@ MonoBehaviour:
   resetPasswordEmail: {fileID: 227842990}
   success: {r: 0.37254903, g: 1, b: 0.40392157, a: 1}
   fail: {r: 0.9811321, g: 0.38412246, b: 0.38412246, a: 1}
+  trueCheckmark: {fileID: 21300000, guid: 053ee960cfbf9444b8ae8d1fbfbff18a, type: 3}
+  emptyCheckmark: {fileID: 21300000, guid: addd422a32695ef429fe208dcae922b4, type: 3}
 --- !u!4 &1069494388
 Transform:
   m_ObjectHideFlags: 0
