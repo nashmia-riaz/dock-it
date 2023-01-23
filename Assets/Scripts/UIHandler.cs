@@ -242,8 +242,78 @@ public class UIHandler : MonoBehaviour
             {
                 listName.GetComponent<Image>().color *= new Color(1, 1, 1, 0);
             }
+
+            bool isOwner = list.Owner == FirebaseManager.instance.currentUser.userID;
+            if (isOwner)
+            {
+                GameObject deleteButton = listName.transform.Find("Delete List").gameObject;
+                deleteButton.SetActive(true);
+                deleteButton.GetComponent<Button>().onClick.AddListener(() =>
+                {
+                    UIHandler.instance.OnClickDeleteList(listName);
+                });
+            }
+            else
+            {
+                listName.transform.Find("Delete List").gameObject.SetActive(false);
+            }
         }
     }
+
+    public void LoadList(List list, bool isOwner)
+    {
+        GameObject listName = CreateListName(list.Name, list.Id);
+        
+        if (list.Id != ListManager.instance.currentList.Id)
+        {
+            listName.GetComponent<Image>().color *= new Color(1, 1, 1, 0);
+        }
+
+        if (isOwner)
+        {
+            GameObject deleteButton = listName.transform.Find("Delete List").gameObject;
+            deleteButton.SetActive(true);
+            deleteButton.GetComponent<Button>().onClick.AddListener(() =>
+            {
+                OnClickDeleteList(listName);
+            });
+        }
+        else
+        {
+            listName.transform.Find("Delete List").gameObject.SetActive(false);
+        }
+    }
+
+    public void OnListDeleted(string listKey)
+    {
+        Debug.LogFormat("Deleting list {0} ", listKey);
+        if(listKey == ListManager.instance.currentList.Id)
+        {
+            while(ListScrollView.transform.childCount > 1)
+            {
+                GameObject item = ListScrollView.transform.GetChild(0).gameObject;
+                if(item)
+                    DestroyImmediate(item);
+            }
+        }
+
+        DestroyListName(listKey);
+    }
+
+    public void DestroyListName(string listKey)
+    {
+        Transform listName = ListNameScrollView.transform.Find(listKey);
+        
+        if(listName)
+            DestroyImmediate(listName.gameObject);
+    }
+
+    public void OnClickDeleteList(GameObject list)
+    {
+        string listKey = list.name;
+        FirebaseManager.instance.DeleteList(listKey);
+    }
+
     void ClearListItems()
     {
         while (ListScrollView.transform.childCount > 1)

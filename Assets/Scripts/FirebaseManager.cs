@@ -17,10 +17,8 @@ public class FirebaseManager : MonoBehaviour
     string refreshToken;
 
     [SerializeField]
-    User currentUser;
+    public User currentUser;
 
-    [SerializeField]
-    bool listItemsInitialized;
 
     private void Awake()
     {
@@ -33,8 +31,6 @@ public class FirebaseManager : MonoBehaviour
         {
             Destroy(this);
         }
-
-        listItemsInitialized = false;
     }
 
     void Initialize()
@@ -258,7 +254,16 @@ public class FirebaseManager : MonoBehaviour
 
                 foreach (var list in lists)
                 {
-                    IEnumerable<DataSnapshot> usersAccessForList = list.Child("UsersAccess").Children;
+                    string owner = list.Child("Owner").Value.ToString();
+
+                    if (owner == currentUser.userID)
+                    {
+                        //add the list to list manager
+                        AddListToListManager(list);
+                        break;
+                    }
+
+                    IEnumerable<DataSnapshot> usersAccessForList = list.Child("Owner").Children;
 
                     foreach (var userID in usersAccessForList)
                     {
@@ -292,6 +297,8 @@ public class FirebaseManager : MonoBehaviour
         List newList = new List(list.Child("Name").Value.ToString());
         newList.Id = list.Key;
 
+        newList.Owner = list.Child("Owner").Value.ToString();
+
         IEnumerable<DataSnapshot> usersAccessForList = list.Child("UsersAccess").Children;
         foreach (var userID in usersAccessForList)
         {
@@ -299,19 +306,31 @@ public class FirebaseManager : MonoBehaviour
             newList.AddUserAccess(userIDString);
         }
 
-        if (!listItemsInitialized)
-        {
-            var refItems = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(list.Key).Child("Items");
-            refItems.ChildAdded += HandleItemAdded;
-            refItems.ChildChanged += HandleItemChanged;
-            listItemsInitialized = true;
-        }
+        var refItems = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(list.Key).Child("Items");
+        refItems.ChildAdded += HandleItemAdded;
+        refItems.ChildChanged += HandleItemChanged;
+
         var refListName = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(list.Key);
         refListName.ChildChanged += HandleListUpdate;
+        refListName.ChildRemoved += HandleListDelete;
+        
 
         ListManager.instance.AllLists.Add(newList);
+        
     }
 
+    void HandleListDelete(object sender, ChildChangedEventArgs args)
+    {
+        if (args.DatabaseError != null)
+        {
+            Debug.LogError(args.DatabaseError.Message);
+            return;
+        }
+
+        string listKey = args.Snapshot.Reference.Parent.Key;
+        UIHandler.instance.OnListDeleted(listKey);
+        ListManager.instance.RemoveList(listKey);
+    }
     void HandleListUpdate(object sender, ChildChangedEventArgs args)
     {
         if (args.DatabaseError != null)
@@ -411,6 +430,7 @@ public class FirebaseManager : MonoBehaviour
         }
 
         string listKey = args.Snapshot.Reference.Parent.Parent.Key;
+
         string task = args.Snapshot.Child("task").Value.ToString();
         string checkmark = args.Snapshot.Child("checkmark").Value.ToString();
         string id = args.Snapshot.Child("id").Value.ToString();
@@ -485,8 +505,7 @@ public class FirebaseManager : MonoBehaviour
 
             });
 
-        reference.Child("Lists").Child(listKey).Child("UsersAccess").Child("User " + ListManager.instance.currentList.UsersAccess.Count).
-            SetValueAsync(currentUser.userID).ContinueWithOnMainThread(task =>
+        reference.Child("Lists").Child(listKey).Child("Owner").SetValueAsync(currentUser.userID).ContinueWithOnMainThread(task =>
             {
                 if (task.IsCanceled)
                 {
@@ -505,8 +524,15 @@ public class FirebaseManager : MonoBehaviour
 
                 UIHandler.instance.AddList(listName, listKey);
 
+                var refItems = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(listKey).Child("Items");
+                refItems.ChildAdded += HandleItemAdded;
+                refItems.ChildChanged += HandleItemChanged;
+
                 var refListName = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(listKey);
                 refListName.ChildChanged += HandleListUpdate;
+                refListName.ChildRemoved += HandleListDelete;
+
+
                 CreateEmptyItem();
             });
     }
@@ -538,16 +564,8 @@ public class FirebaseManager : MonoBehaviour
                     Debug.LogError("Error writing data " + task.Exception);
                     return;
                 }
-
-                if (!listItemsInitialized)
-                {
-                    var refItems = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(ListManager.instance.currentList.Id).Child("Items");
-                    refItems.ChildAdded += HandleItemAdded;
-                    refItems.ChildChanged += HandleItemChanged;
-                    listItemsInitialized = true;
-                }
-
                 Debug.Log("[ITEM] Write Empty Item Successful " + task.IsCompleted);
+
                 //ListManager.instance.currentList.AddItem(item);
             });
     }
@@ -556,5 +574,26 @@ public class FirebaseManager : MonoBehaviour
         auth.SignOut();
         PlayerPrefs.DeleteKey("Token");
         UIHandler.instance.SwitchToPanel(UIHandler.instance.signinPanel);
+    }
+
+    public void DeleteList(string listKey)
+    {
+        Debug.LogFormat("[LIST] Deleting list {0} ", listKey);
+        reference.Child("Lists").Child(listKey).RemoveValueAsync().ContinueWithOnMainThread(task => {
+
+            if (task.IsCanceled)
+            {
+                Debug.LogError("Task cancelled");
+                return;
+            }
+            if (task.IsFaulted)
+            {
+                Debug.LogError("Error writing data " + task.Exception);
+                return;
+            }
+
+            //UIHandler.instance.OnListDeleted(listKey);
+            //ListManager.instance.RemoveList(listKey);
+        });
     }
 }

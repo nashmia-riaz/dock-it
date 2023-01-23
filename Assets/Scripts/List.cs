@@ -7,6 +7,7 @@ public class List
     List<Item> _items;
     string _id;
     string _name;
+    string _owner;
     List<string> _usersAccess;
 
     public List(string name)
@@ -57,4 +58,6 @@ public class List
     public List<Item> Items { get { return _items; } }
     
     public string Name { get { return _name; } set { _name = value; } }
+
+    public string Owner { get { return _owner; } set { _owner = value; } }
 }
