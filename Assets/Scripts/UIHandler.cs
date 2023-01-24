@@ -226,7 +226,7 @@ public class UIHandler : MonoBehaviour
         SwitchList(listObj);
     }
 
-    public void LoadLists()
+    public void LoadListNames()
     {
         while (ListNameScrollView.transform.childCount > 1)
         {

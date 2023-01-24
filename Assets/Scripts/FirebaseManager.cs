@@ -258,15 +258,22 @@ public class FirebaseManager : MonoBehaviour
 
                 foreach (var list in lists)
                 {
-                    IEnumerable<DataSnapshot> usersAccessForList = list.Child("UsersAccess").Children;
-
-                    foreach (var userID in usersAccessForList)
+                    if (list.Child("Owner").Value.ToString() == currentUser.userID)
                     {
-                        if (userID.Value.ToString() ==  currentUser.userID)
+                        AddListToListManager(list);
+                    }
+                    else
+                    {
+                        IEnumerable<DataSnapshot> usersAccessForList = list.Child("UsersAccess").Children;
+
+                        foreach (var userID in usersAccessForList)
                         {
-                            //add the list to list manager
-                            AddListToListManager(list);
-                            break;
+                            if (userID.Value.ToString() == currentUser.userID)
+                            {
+                                //add the list to list manager
+                                AddListToListManager(list);
+                                break;
+                            }
                         }
                     }
                 }
@@ -277,7 +284,7 @@ public class FirebaseManager : MonoBehaviour
                     CreateEmptyList();
                 else
                 {
-                    UIHandler.instance.LoadLists();
+                    UIHandler.instance.LoadListNames();
                 }
 
                 Debug.Log("[LISTS] Fetched lists");
