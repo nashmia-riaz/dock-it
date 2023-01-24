@@ -127,4 +127,17 @@ public class ListManager : MonoBehaviour
             list.Items[itemIndex] = item;
         }
     }
+
+    public void RemoveList(string key)
+    {
+        List list = FindListUsingKey(key);
+        AllLists.Remove(list);
+    }
+
+    public void RemoveItem(string listKey, Item item)
+    {
+        List list = FindListUsingKey(listKey);
+        list.RemoveItem(item);
+
+    }
 }
