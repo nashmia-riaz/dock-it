@@ -255,23 +255,28 @@ public class FirebaseManager : MonoBehaviour
                 foreach (var list in lists)
                 {
                     string owner = list.Child("Owner").Value.ToString();
-
                     if (owner == currentUser.userID)
                     {
-                        //add the list to list manager
                         AddListToListManager(list);
-                        break;
                     }
+                    else{
 
-                    IEnumerable<DataSnapshot> usersAccessForList = list.Child("Owner").Children;
+                        IEnumerable<DataSnapshot> usersAccessForList = list.Child("Owner").Children;
 
-                    foreach (var userID in usersAccessForList)
-                    {
-                        if (userID.Value.ToString() ==  currentUser.userID)
+                        foreach (var userID in usersAccessForList)
+
                         {
-                            //add the list to list manager
-                            AddListToListManager(list);
-                            break;
+                            IEnumerable<DataSnapshot> usersAccessForList = list.Child("UsersAccess").Children;
+
+                            foreach (var userID in usersAccessForList)
+                            {
+                                if (userID.Value.ToString() == currentUser.userID)
+                                {
+                                    //add the list to list manager
+                                    AddListToListManager(list);
+                                    break;
+                                }
+                            }
                         }
                     }
                 }
@@ -282,7 +287,7 @@ public class FirebaseManager : MonoBehaviour
                     CreateEmptyList();
                 else
                 {
-                    UIHandler.instance.LoadLists();
+                    UIHandler.instance.LoadListNames();
                 }
 
                 Debug.Log("[LISTS] Fetched lists");
