@@ -309,6 +309,7 @@ public class FirebaseManager : MonoBehaviour
         var refItems = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(list.Key).Child("Items");
         refItems.ChildAdded += HandleItemAdded;
         refItems.ChildChanged += HandleItemChanged;
+        refItems.ChildRemoved += HandleItemDeleted;
 
         var refListName = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(list.Key);
         refListName.ChildChanged += HandleListUpdate;
@@ -317,6 +318,45 @@ public class FirebaseManager : MonoBehaviour
 
         ListManager.instance.AllLists.Add(newList);
         
+    }
+    public void DeleteItem(string itemID)
+    {
+        reference.Child("Lists").Child(ListManager.instance.currentList.Id).Child("Items").Child(itemID).RemoveValueAsync().ContinueWithOnMainThread(task => {
+
+            if (task.IsCanceled)
+            {
+                Debug.LogError("Task cancelled");
+                return;
+            }
+            if (task.IsFaulted)
+            {
+                Debug.LogError("Error writing data " + task.Exception);
+                return;
+            }
+
+            Debug.Log("[ITEM] Removed item successfully");
+        });
+    }
+
+
+    public void HandleItemDeleted(object sender, ChildChangedEventArgs args)
+    {
+        if (args.DatabaseError != null)
+        {
+            Debug.LogError(args.DatabaseError.Message);
+            return;
+        }
+
+        string listKey = args.Snapshot.Reference.Parent.Parent.Key;
+
+        string task = args.Snapshot.Child("task").Value.ToString();
+        string checkmark = args.Snapshot.Child("checkmark").Value.ToString();
+        string id = args.Snapshot.Child("id").Value.ToString();
+        Item newItem = new Item(task, checkmark == "True", id);
+
+        ListManager.instance.RemoveItem(listKey, newItem);
+        if (listKey == ListManager.instance.currentList.Id)
+            UIHandler.instance.RemoveItem(id);
     }
 
     void HandleListDelete(object sender, ChildChangedEventArgs args)
@@ -529,6 +569,7 @@ public class FirebaseManager : MonoBehaviour
                 var refItems = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(listKey).Child("Items");
                 refItems.ChildAdded += HandleItemAdded;
                 refItems.ChildChanged += HandleItemChanged;
+                refItems.ChildRemoved += HandleItemDeleted;
 
                 var refListName = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(listKey);
                 refListName.ChildChanged += HandleListUpdate;
