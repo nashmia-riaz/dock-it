@@ -7062,8 +7062,6 @@ MonoBehaviour:
   ListItemPrefab: {fileID: 6745420196843738064, guid: d3175e9af6bb3f64ca45837e781a44fd, type: 3}
   ListNamePrefab: {fileID: 7940560765821395019, guid: 2bb071c3ed592564cabc6abbcd657135, type: 3}
   ListNameScrollView: {fileID: 564952862}
-  checkmarkTick: {fileID: 21300000, guid: 053ee960cfbf9444b8ae8d1fbfbff18a, type: 3}
-  checkmarkEmpty: {fileID: 21300000, guid: addd422a32695ef429fe208dcae922b4, type: 3}
   forgotPasswordErrorText: {fileID: 579125794}
   resetPasswordEmail: {fileID: 227842990}
   success: {r: 0.37254903, g: 1, b: 0.40392157, a: 1}
