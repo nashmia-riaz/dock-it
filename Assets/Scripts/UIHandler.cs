@@ -209,7 +209,18 @@ public class UIHandler : MonoBehaviour
         TMP_InputField task = listItem.transform.Find("List Details").Find("Task").GetComponent<TMP_InputField>();
         task.onEndEdit.AddListener(delegate { OnEditTask(task); });
 
+        Button deleteButton = listItem.transform.Find("Delete").GetComponent<Button>();
+        deleteButton.onClick.AddListener(()=> {
+            OnDeleteItem(listItem);
+        });
+
         listItem.transform.Find("List Details").Find("Task").GetComponent<TMP_InputField>().text = item.task;
+    }
+
+    void OnDeleteItem(GameObject listItem)
+    {
+        string itemKey = listItem.name;
+        FirebaseManager.instance.DeleteItem(itemKey);
     }
 
     public void OnEditTask(TMP_InputField inputField)
@@ -300,6 +311,19 @@ public class UIHandler : MonoBehaviour
         DestroyListName(listKey);
     }
 
+
+    public void RemoveItem(string itemKey)
+    {
+        for(int i = 0; i < ListScrollView.childCount; i++)
+        {
+            Transform item = ListScrollView.GetChild(i);
+            if (item.name == itemKey)
+            {
+                DestroyImmediate(item.gameObject);
+                break;
+            }
+        }
+    }
     public void DestroyListName(string listKey)
     {
         Transform listName = ListNameScrollView.transform.Find(listKey);

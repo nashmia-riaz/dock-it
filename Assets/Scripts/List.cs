@@ -32,7 +32,9 @@ public class List
         _items.Add(item);
     }
 
-    public void RemoveItem() { }
+    public void RemoveItem(Item item) {
+        _items.RemoveAll(x => x.id == item.id);
+    }
 
     public void AddUserAccess(string userId)
     {
