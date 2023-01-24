@@ -326,10 +326,12 @@ public class FirebaseManager : MonoBehaviour
             Debug.LogError(args.DatabaseError.Message);
             return;
         }
-
-        string listKey = args.Snapshot.Reference.Parent.Key;
-        UIHandler.instance.OnListDeleted(listKey);
-        ListManager.instance.RemoveList(listKey);
+        if (args.Snapshot.Key.ToString() == "Name")
+        {
+            string listKey = args.Snapshot.Reference.Parent.Key;
+            UIHandler.instance.OnListDeleted(listKey);
+            ListManager.instance.RemoveList(listKey);
+        }
     }
     void HandleListUpdate(object sender, ChildChangedEventArgs args)
     {
