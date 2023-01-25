@@ -261,21 +261,15 @@ public class FirebaseManager : MonoBehaviour
                     }
                     else{
 
-                        IEnumerable<DataSnapshot> usersAccessForList = list.Child("Owner").Children;
+                        IEnumerable<DataSnapshot> usersAccessForList = list.Child("UsersAccess").Children;
 
                         foreach (var userID in usersAccessForList)
-
                         {
-                            IEnumerable<DataSnapshot> usersAccessForList = list.Child("UsersAccess").Children;
-
-                            foreach (var userID in usersAccessForList)
+                            if (userID.Value.ToString() == currentUser.userID)
                             {
-                                if (userID.Value.ToString() == currentUser.userID)
-                                {
-                                    //add the list to list manager
-                                    AddListToListManager(list);
-                                    break;
-                                }
+                                //add the list to list manager
+                                AddListToListManager(list);
+                                break;
                             }
                         }
                     }
