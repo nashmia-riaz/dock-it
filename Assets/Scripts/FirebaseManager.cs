@@ -527,6 +527,8 @@ public class FirebaseManager : MonoBehaviour
         List list = new(listName, listKey, currentUser.userID);
         ListManager.instance.currentList = list;
 
+        UserListInfo listInfo = new UserListInfo(listKey, true);
+
         reference.Child("Lists").Child(listKey).Child("Name").
             SetValueAsync(listName).ContinueWithOnMainThread(task =>
             {
@@ -545,6 +547,22 @@ public class FirebaseManager : MonoBehaviour
 
 
             });
+
+        reference.Child("Users").Child(currentUser.userID).Child("Lists").Child(listKey).Child("isOwner").SetValueAsync(true)
+            .ContinueWithOnMainThread(task => {
+            if (task.IsCanceled)
+            {
+                Debug.LogError("Task cancelled");
+                return;
+            }
+            if (task.IsFaulted)
+            {
+                Debug.LogError("Error writing data " + task.Exception);
+                return;
+            }
+
+            Debug.Log("[USER] added list to user as owner");
+        });
 
         reference.Child("Lists").Child(listKey).Child("Owner").SetValueAsync(currentUser.userID).ContinueWithOnMainThread(task =>
             {
@@ -593,6 +611,7 @@ public class FirebaseManager : MonoBehaviour
 
         Debug.Log("Item json " + itemJson);
 
+
         reference.Child("Lists").Child(ListManager.instance.currentList.Id).
             Child("Items").Child(itemKey).SetRawJsonValueAsync(itemJson).ContinueWithOnMainThread(task =>
             {
@@ -637,5 +656,16 @@ public class FirebaseManager : MonoBehaviour
             //UIHandler.instance.OnListDeleted(listKey);
             //ListManager.instance.RemoveList(listKey);
         });
+    }
+}
+
+struct UserListInfo{
+    public string ListKey;
+    public bool isOwner;
+
+    public UserListInfo(string mListKey, bool mIsOwner)
+    {
+        ListKey = mListKey;
+        isOwner = mIsOwner;
     }
 }
