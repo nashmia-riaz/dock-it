@@ -5,6 +5,7 @@ using UnityEngine;
 using Firebase.Database;
 using Firebase.Auth;
 using Firebase;
+using System.Threading.Tasks;
 
 public class FirebaseManager : MonoBehaviour
 {
@@ -242,7 +243,8 @@ public class FirebaseManager : MonoBehaviour
 
     void FetchLists()
     {
-        reference.Child("Lists").GetValueAsync().ContinueWithOnMainThread(task => {
+        var taskScheduler = TaskScheduler.FromCurrentSynchronizationContext();
+        reference.Child("Users").Child(currentUser.userID).Child("Lists").GetValueAsync().ContinueWithOnMainThread(task => {
             if (task.IsFaulted)
             {
                 Debug.LogError("Task failed " + task.Exception);
@@ -252,29 +254,25 @@ public class FirebaseManager : MonoBehaviour
                 DataSnapshot snapshot = task.Result;
                 IEnumerable<DataSnapshot> lists = snapshot.Children;
 
-                foreach (var list in lists)
+                foreach(var list in lists)
                 {
-                    string owner = list.Child("Owner").Value.ToString();
-                    if (owner == currentUser.userID)
-                    {
-                        AddListToListManager(list);
-                    }
-                    else{
+                    string listKey = list.Key.ToString();
 
-                        IEnumerable<DataSnapshot> usersAccessForList = list.Child("UsersAccess").Children;
+                    reference.Child("Lists").Child(listKey).GetValueAsync().ContinueWithOnMainThread(listTask => {
 
-                        foreach (var userID in usersAccessForList)
+                        if (listTask.IsFaulted)
                         {
-                            if (userID.Value.ToString() == currentUser.userID)
-                            {
-                                //add the list to list manager
-                                AddListToListManager(list);
-                                break;
-                            }
+                            Debug.LogError("Task failed " + listTask.Exception);
                         }
-                    }
-                }
+                        else if (listTask.IsCompleted)
+                        {
+                            DataSnapshot listSnapshot = listTask.Result;
+                            AddListToListManager(listSnapshot);
+                            Debug.Log("Getting list " + listSnapshot.Child("Name").Value.ToString());
+                        }
 
+                    });
+                }
                 ListManager.instance.UpdateCurrentList();
 
                 if (ListManager.instance.AllLists.Count <= 0)
