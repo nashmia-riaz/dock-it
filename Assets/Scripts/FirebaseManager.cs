@@ -5,6 +5,7 @@ using UnityEngine;
 using Firebase.Database;
 using Firebase.Auth;
 using Firebase;
+using System.Threading.Tasks;
 
 public class FirebaseManager : MonoBehaviour
 {
@@ -242,7 +243,8 @@ public class FirebaseManager : MonoBehaviour
 
     void FetchLists()
     {
-        reference.Child("Lists").GetValueAsync().ContinueWithOnMainThread(task => {
+        var taskScheduler = TaskScheduler.FromCurrentSynchronizationContext();
+        reference.Child("Users").Child(currentUser.userID).Child("Lists").GetValueAsync().ContinueWith(task => {
             if (task.IsFaulted)
             {
                 Debug.LogError("Task failed " + task.Exception);
@@ -251,47 +253,51 @@ public class FirebaseManager : MonoBehaviour
             {
                 DataSnapshot snapshot = task.Result;
                 IEnumerable<DataSnapshot> lists = snapshot.Children;
+                long totalLists = snapshot.ChildrenCount;
+                int listProcessed = 0;
 
-                foreach (var list in lists)
+                foreach(var list in lists)
                 {
-                    string owner = list.Child("Owner").Value.ToString();
-                    if (owner == currentUser.userID)
-                    {
-                        AddListToListManager(list);
-                    }
-                    else{
+                    string listKey = list.Key.ToString();
 
-                        IEnumerable<DataSnapshot> usersAccessForList = list.Child("UsersAccess").Children;
+                    reference.Child("Lists").Child(listKey).GetValueAsync().ContinueWith(listTask => {
 
-                        foreach (var userID in usersAccessForList)
+                        if (listTask.IsFaulted)
                         {
-                            if (userID.Value.ToString() == currentUser.userID)
+                            Debug.LogError("Task failed " + listTask.Exception);
+                        }
+                        else if (listTask.IsCompleted)
+                        {
+                            DataSnapshot listSnapshot = listTask.Result;
+                            AddListToListManager(listSnapshot);
+                            Debug.Log("Getting list " + listSnapshot.Child("Name").Value.ToString());
+                            listProcessed++;
+
+                            if(listProcessed == totalLists)
                             {
-                                //add the list to list manager
-                                AddListToListManager(list);
-                                break;
+                                ListManager.instance.UpdateCurrentList();
+
+                                if (ListManager.instance.AllLists.Count <= 0)
+                                    CreateEmptyList();
+                                else
+                                {
+                                    UIHandler.instance.LoadListNames();
+                                }
+
+                                Debug.Log("[LISTS] Fetched lists");
+                                //UIHandler.instance.LoadCurrentList();
+                                OnAutoSignIn();
                             }
                         }
-                    }
+
+                    }, taskScheduler);
                 }
-
-                ListManager.instance.UpdateCurrentList();
-
-                if (ListManager.instance.AllLists.Count <= 0)
-                    CreateEmptyList();
-                else
-                {
-                    UIHandler.instance.LoadListNames();
-                }
-
-                Debug.Log("[LISTS] Fetched lists");
-                //UIHandler.instance.LoadCurrentList();
-                OnAutoSignIn();
             }
-        });
+        }, taskScheduler);
+
     }
 
-    void AddListToListManager(DataSnapshot list)
+    List AddListToListManager(DataSnapshot list)
     {
         List newList = new List(list.Child("Name").Value.ToString());
         newList.Id = list.Key;
@@ -314,10 +320,58 @@ public class FirebaseManager : MonoBehaviour
         refListName.ChildChanged += HandleListUpdate;
         refListName.ChildRemoved += HandleListDelete;
         
-
         ListManager.instance.AllLists.Add(newList);
-        
+
+        return newList;
     }
+
+    public void ImportList(string listKey)
+    {
+        //check if list is already in the system before pursuing
+        var taskScheduler = TaskScheduler.FromCurrentSynchronizationContext();
+        reference.Child("Lists").Child(listKey).GetValueAsync().ContinueWith(task => {
+            if (task.IsFaulted)
+            {
+                Debug.LogError("Task failed " + task.Exception);
+            }
+            else if (task.IsCompleted)
+            {
+                reference.Child("Users").Child(currentUser.userID).Child("Lists").Child(listKey).Child("isOwner").SetValueAsync(false).ContinueWith(listTask=> {
+                    if (listTask.IsCanceled)
+                    {
+                        Debug.LogError("Task cancelled");
+                        return;
+                    }
+                    if (listTask.IsFaulted)
+                    {
+                        Debug.LogError("Error writing data " + task.Exception);
+                        return;
+                    }
+
+                    DataSnapshot list = task.Result;
+                    List newList = AddListToListManager(list);
+                    UIHandler.instance.AddList(ref newList);
+                    UIHandler.instance.OnHideImportListPanel();
+                }, taskScheduler);
+            }
+        }, taskScheduler);
+
+        reference.Child("Lists").Child(listKey).Child("UsersAccess").Child(currentUser.userID).SetValueAsync("").ContinueWith(task=> {
+            if (task.IsCanceled)
+            {
+                Debug.LogError("Task cancelled");
+                return;
+            }
+            if (task.IsFaulted)
+            {
+                Debug.LogError("Error writing data " + task.Exception);
+                return;
+            }
+
+            Debug.Log("[LIST] Updated user access to add " + currentUser.userID + " to " +listKey);
+        });
+    }
+
     public void DeleteItem(string itemID)
     {
         reference.Child("Lists").Child(ListManager.instance.currentList.Id).Child("Items").Child(itemID).RemoveValueAsync().ContinueWithOnMainThread(task => {
@@ -527,6 +581,8 @@ public class FirebaseManager : MonoBehaviour
         List list = new(listName, listKey, currentUser.userID);
         ListManager.instance.currentList = list;
 
+        UserListInfo listInfo = new UserListInfo(listKey, true);
+
         reference.Child("Lists").Child(listKey).Child("Name").
             SetValueAsync(listName).ContinueWithOnMainThread(task =>
             {
@@ -546,6 +602,22 @@ public class FirebaseManager : MonoBehaviour
 
             });
 
+        reference.Child("Users").Child(currentUser.userID).Child("Lists").Child(listKey).Child("isOwner").SetValueAsync(true)
+            .ContinueWithOnMainThread(task => {
+            if (task.IsCanceled)
+            {
+                Debug.LogError("Task cancelled");
+                return;
+            }
+            if (task.IsFaulted)
+            {
+                Debug.LogError("Error writing data " + task.Exception);
+                return;
+            }
+
+            Debug.Log("[USER] added list to user as owner");
+        });
+
         reference.Child("Lists").Child(listKey).Child("Owner").SetValueAsync(currentUser.userID).ContinueWithOnMainThread(task =>
             {
                 if (task.IsCanceled)
@@ -563,7 +635,7 @@ public class FirebaseManager : MonoBehaviour
 
                 ListManager.instance.AllLists.Add(list);
 
-                UIHandler.instance.AddList(listName, listKey);
+                UIHandler.instance.AddList(ref list);
 
                 var refItems = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(listKey).Child("Items");
                 refItems.ChildAdded += HandleItemAdded;
@@ -592,6 +664,7 @@ public class FirebaseManager : MonoBehaviour
         string itemJson = JsonUtility.ToJson(item);
 
         Debug.Log("Item json " + itemJson);
+
 
         reference.Child("Lists").Child(ListManager.instance.currentList.Id).
             Child("Items").Child(itemKey).SetRawJsonValueAsync(itemJson).ContinueWithOnMainThread(task =>
@@ -637,5 +710,16 @@ public class FirebaseManager : MonoBehaviour
             //UIHandler.instance.OnListDeleted(listKey);
             //ListManager.instance.RemoveList(listKey);
         });
+    }
+}
+
+struct UserListInfo{
+    public string ListKey;
+    public bool isOwner;
+
+    public UserListInfo(string mListKey, bool mIsOwner)
+    {
+        ListKey = mListKey;
+        isOwner = mIsOwner;
     }
 }

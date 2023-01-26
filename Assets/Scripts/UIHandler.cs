@@ -17,7 +17,7 @@ public class UIHandler : MonoBehaviour
     TMP_InputField emailLogInput, passwordLogInput;
 
     [SerializeField]
-    public Animator LoadingPanel, BlurOverlay, Menu, ResetPasswordPanel;
+    public Animator LoadingPanel, BlurOverlay, Menu, ResetPasswordPanel, ShareListPanel, ImportListPanel;
 
     [SerializeField]
     TMP_Text loadingText, userName;
@@ -45,13 +45,16 @@ public class UIHandler : MonoBehaviour
     TMP_Text forgotPasswordErrorText;
 
     [SerializeField]
-    TMP_InputField resetPasswordEmail;
+    TMP_InputField resetPasswordEmail, shareListLink, importListIF;
 
     [SerializeField]
     Color success, fail;
 
     [SerializeField]
     Sprite trueCheckmark, emptyCheckmark;
+
+    [SerializeField]
+    Button ShareListButton;
 
     private void Awake()
     {
@@ -230,10 +233,26 @@ public class UIHandler : MonoBehaviour
         FirebaseManager.instance.UpdateItemTask(itemKey, task);
     }
 
-    public void AddList(string listName, string listID)
+    public void AddList(ref List list)
     {
-        Debug.Log("[LIST NAME OBJ] Creating list name + "+ listName + " " +listID);
-        GameObject listObj = CreateListName(listName, listID);
+        Debug.Log("[LIST NAME OBJ] Creating list name + "+ list.Name + " " +list.Id);
+        UpdateListNameCurrent(list.Name);
+        GameObject listObj = CreateListName(list.Name, list.Id);
+        
+        if(list.Owner == FirebaseManager.instance.currentUser.userID)
+        {
+            GameObject deleteButton = listObj.transform.Find("Delete List").gameObject;
+            deleteButton.SetActive(true);
+            deleteButton.GetComponent<Button>().onClick.AddListener(() =>
+            {
+                UIHandler.instance.OnClickDeleteList(listObj);
+            });
+        }
+        else
+        {
+            listObj.transform.Find("Delete List").gameObject.SetActive(false);
+        }
+
         SwitchList(listObj);
     }
 
@@ -257,6 +276,9 @@ public class UIHandler : MonoBehaviour
             bool isOwner = list.Owner == FirebaseManager.instance.currentUser.userID;
             if (isOwner)
             {
+                UpdateShareListLink(list.Id);
+                ShareListButton.interactable = true;
+
                 GameObject deleteButton = listName.transform.Find("Delete List").gameObject;
                 deleteButton.SetActive(true);
                 deleteButton.GetComponent<Button>().onClick.AddListener(() =>
@@ -267,8 +289,15 @@ public class UIHandler : MonoBehaviour
             else
             {
                 listName.transform.Find("Delete List").gameObject.SetActive(false);
+                ShareListButton.interactable = false;
+                UpdateShareListLink("");
             }
         }
+    }
+
+    public void UpdateShareListLink(string text)
+    {
+        shareListLink.text = text;
     }
 
     public void LoadList(List list, bool isOwner)
@@ -288,10 +317,14 @@ public class UIHandler : MonoBehaviour
             {
                 OnClickDeleteList(listName);
             });
+
+            UpdateShareListLink(list.Id);
         }
         else
         {
             listName.transform.Find("Delete List").gameObject.SetActive(false);
+            //disable share list link button
+            UpdateShareListLink(list.Id);
         }
     }
 
@@ -393,6 +426,39 @@ public class UIHandler : MonoBehaviour
         });
         Debug.Log("[LIST OBJ] Created list name");
         return listName;
+    }
+
+    public void OnClickImportList()
+    {
+        string listKey = importListIF.text;
+        if (listKey != "")
+            FirebaseManager.instance.ImportList(listKey);
+    }
+
+    public void OnShowImportListPanel()
+    {
+        ImportListPanel.gameObject.SetActive(true);
+    }
+
+    public void OnHideImportListPanel()
+    {
+        ImportListPanel.SetTrigger("Slide Out");
+        StartCoroutine(Helper.waitBeforeExecution(0.5f, () => {
+            ImportListPanel.gameObject.SetActive(false);
+        }));
+    }
+
+    public void OnShowShareListPanel()
+    {
+        ShareListPanel.gameObject.SetActive(true);
+    }
+
+    public void OnHideShareListPanel()
+    {
+        ShareListPanel.SetTrigger("Slide Out");
+        StartCoroutine(Helper.waitBeforeExecution(0.5f, () => {
+            ShareListPanel.gameObject.SetActive(false);
+        }));
     }
 
     public void OnShowMenu()
