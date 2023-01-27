@@ -404,6 +404,8 @@ public class UIHandler : MonoBehaviour
             listID.GetComponent<Image>().color = new Color(listColor.r, listColor.g, listColor.b, 1);
         }
 
+        PlayerPrefs.SetString("CurrentList", listID.name);
+
         LoadCurrentList();
         OnHideMenu();
     }
