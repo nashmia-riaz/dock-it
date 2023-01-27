@@ -48,7 +48,7 @@ public class UIHandler : MonoBehaviour
     TMP_InputField resetPasswordEmail, shareListLink, importListIF;
 
     [SerializeField]
-    Color success, fail;
+    Color success, fail, textColor;
 
     [SerializeField]
     Sprite trueCheckmark, emptyCheckmark;
@@ -213,12 +213,22 @@ public class UIHandler : MonoBehaviour
         TMP_InputField task = listItem.transform.Find("List Details").Find("Task").GetComponent<TMP_InputField>();
         task.onEndEdit.AddListener(delegate { OnEditTask(task); });
 
+        //if it is ticked
+        if (!item.checkmark && checkmark.sprite.name == trueCheckmark.name)
+        {
+            task.textComponent.color *= new Color(1, 1, 1, 0.5f);
+            task.text = "<s>" + item.task + "</s>";
+        }
+        else
+        {
+            listItem.transform.Find("List Details").Find("Task").GetComponent<TMP_InputField>().text = item.task;
+        }
+
         Button deleteButton = listItem.transform.Find("Delete").GetComponent<Button>();
         deleteButton.onClick.AddListener(()=> {
             OnDeleteItem(listItem);
         });
 
-        listItem.transform.Find("List Details").Find("Task").GetComponent<TMP_InputField>().text = item.task;
     }
 
     void OnDeleteItem(GameObject listItem)
@@ -540,7 +550,23 @@ public class UIHandler : MonoBehaviour
                 SetCheckmarkImage(checkmark, item.checkmark);
 
                 TMP_InputField task = itemObj.Find("List Details").Find("Task").GetComponent<TMP_InputField>();
-                task.text = item.task;
+                
+                //if it is ticked
+                if (!item.checkmark && checkmark.sprite.name == trueCheckmark.name)
+                {
+                    task.textComponent.color = textColor * new Color(1, 1, 1, 0.5f);
+                    task.text = "<s>"+ item.task + "</s>";
+                    itemObj.SetAsLastSibling();
+                }
+                else if(item.checkmark && checkmark.sprite.name == emptyCheckmark.name)
+                {
+                    task.textComponent.color = textColor;
+                    task.text = item.task;
+                    itemObj.SetSiblingIndex(1);
+                }else 
+                { 
+                    task.text = item.task; 
+                }
 
                 break;
             }
