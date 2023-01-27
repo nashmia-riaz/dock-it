@@ -10,6 +10,9 @@ public class ListManager : MonoBehaviour
 
     public List<List> AllLists = new();
 
+    [SerializeField]
+    bool rorderList = true;
+
     private void Awake()
     {
         if (instance == null)

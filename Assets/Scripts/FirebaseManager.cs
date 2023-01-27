@@ -311,7 +311,7 @@ public class FirebaseManager : MonoBehaviour
             newList.AddUserAccess(userIDString);
         }
 
-        var refItems = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(list.Key).Child("Items");
+        var refItems = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(list.Key).Child("Items").OrderByChild("checkmark");
         refItems.ChildAdded += HandleItemAdded;
         refItems.ChildChanged += HandleItemChanged;
         refItems.ChildRemoved += HandleItemDeleted;
@@ -551,6 +551,12 @@ public class FirebaseManager : MonoBehaviour
         ListManager.instance.UpdateItemInList(listKey, item);
     }
 
+
+    public void ChangeOrderOfItem(string listKey, string itemKey)
+    {
+        //reference.Child("Lists").Child(listKey).OrderByChild()
+    }
+
     void OnAutoSignIn()
     {
         Debug.Log("[UI] Switching to main panel");
@@ -637,7 +643,7 @@ public class FirebaseManager : MonoBehaviour
 
                 UIHandler.instance.AddList(ref list);
 
-                var refItems = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(listKey).Child("Items");
+                var refItems = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(listKey).Child("Items").OrderByChild("checkmark");
                 refItems.ChildAdded += HandleItemAdded;
                 refItems.ChildChanged += HandleItemChanged;
                 refItems.ChildRemoved += HandleItemDeleted;
@@ -660,7 +666,7 @@ public class FirebaseManager : MonoBehaviour
 
         Debug.Log("Item key " + itemKey);
 
-        Item item = new Item("New task", false, itemKey);
+        Item item = new Item("New task", true, itemKey);
         string itemJson = JsonUtility.ToJson(item);
 
         Debug.Log("Item json " + itemJson);

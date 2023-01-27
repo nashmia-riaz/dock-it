@@ -200,10 +200,7 @@ public class UIHandler : MonoBehaviour
         GameObject listItem = Instantiate(ListItemPrefab, ListScrollView);
         listItem.transform.name = itemKey;
         Debug.LogFormat("Item children {0}", listItem.transform.childCount);
-        //listItem.transform.SetSiblingIndex(listItem.transform.childCount - 2);
-        
-        if(ListScrollView.childCount > 1)
-            listItem.transform.SetSiblingIndex(1);
+        listItem.transform.SetSiblingIndex(1);
 
         Image checkmark = listItem.transform.Find("List Details").Find("Check").GetComponent<Image>();
         SetCheckmarkImage(checkmark, item.checkmark);
@@ -521,7 +518,7 @@ public class UIHandler : MonoBehaviour
 
     void SetCheckmarkImage(Image image, bool state)
     {
-        if (state)
+        if (!state)
         {
             image.sprite = trueCheckmark;
         }
@@ -557,12 +554,12 @@ public class UIHandler : MonoBehaviour
 
         if(checkmarkImage.sprite.name == "Checkmark True")
         {
-            state = false;
+            state = true;
             checkmarkImage.sprite = emptyCheckmark;
         }
         else
         {
-            state = true;
+            state = false;
             checkmarkImage.sprite = trueCheckmark;
         }
 
