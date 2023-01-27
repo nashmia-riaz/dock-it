@@ -253,6 +253,7 @@ public class UIHandler : MonoBehaviour
             listObj.transform.Find("Delete List").gameObject.SetActive(false);
         }
 
+        UpdateListNameCurrent(list.Name);
         SwitchList(listObj);
     }
 
@@ -422,6 +423,7 @@ public class UIHandler : MonoBehaviour
         listName.transform.name = id;
         listName.transform.Find("List Name").GetComponent<TMP_Text>().text = name;
         listName.GetComponent<Button>().onClick.AddListener(() => {
+            UpdateListNameCurrent(name);
             SwitchList(listName);
         });
         Debug.Log("[LIST OBJ] Created list name");
