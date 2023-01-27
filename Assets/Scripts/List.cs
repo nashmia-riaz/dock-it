@@ -24,7 +24,7 @@ public class List
 
         _name = name;
         _id = id;
-        _usersAccess.Add(userCreated);
+        _owner = userCreated;
     }
 
     public void AddItem(Item item)

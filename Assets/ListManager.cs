@@ -34,6 +34,16 @@ public class ListManager : MonoBehaviour
         }
     }
 
+    public void AddUserAccessToList(string listKey, string userID)
+    {
+        foreach(List list in AllLists)
+        {
+            if(list.Id == listKey)
+            {
+                list.AddUserAccess(userID);
+            }
+        }
+    }
     public void UpdateCurrentList()
     {
         if (currentList != null) return;
