@@ -248,7 +248,7 @@ public class UIHandler : MonoBehaviour
     {
         Debug.Log("[LIST NAME OBJ] Creating list name + "+ list.Name + " " +list.Id);
         UpdateListNameCurrent(list.Name);
-        GameObject listObj = CreateListName(list.Name, list.Id);
+        GameObject listObj = CreateListName(list);
         
         if(list.Owner == FirebaseManager.instance.currentUser.userID)
         {
@@ -278,7 +278,7 @@ public class UIHandler : MonoBehaviour
         foreach (List list in ListManager.instance.AllLists)
         {
             Debug.Log("Loading List into UI " + list.Id);
-            GameObject listName = CreateListName(list.Name, list.Id);
+            GameObject listName = CreateListName(list);
 
             if (list.Id != ListManager.instance.currentList.Id)
             {
@@ -314,7 +314,7 @@ public class UIHandler : MonoBehaviour
 
     public void LoadList(List list, bool isOwner)
     {
-        GameObject listName = CreateListName(list.Name, list.Id);
+        GameObject listName = CreateListName(list);
         
         if (list.Id != ListManager.instance.currentList.Id)
         {
@@ -430,13 +430,13 @@ public class UIHandler : MonoBehaviour
         }
     }
 
-    public GameObject CreateListName(string name, string id)
+    public GameObject CreateListName(List list)
     {
         GameObject listName = Instantiate(ListNamePrefab, ListNameScrollView.transform);
-        listName.transform.name = id;
-        listName.transform.Find("List Name").GetComponent<TMP_Text>().text = name;
+        listName.transform.name = list.Id;
+        listName.transform.Find("List Name").GetComponent<TMP_Text>().text = list.Name;
         listName.GetComponent<Button>().onClick.AddListener(() => {
-            UpdateListNameCurrent(name);
+            UpdateListNameCurrent(list.Name);
             SwitchList(listName);
         });
         Debug.Log("[LIST OBJ] Created list name");

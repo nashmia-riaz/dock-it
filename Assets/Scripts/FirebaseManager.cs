@@ -367,6 +367,7 @@ public class FirebaseManager : MonoBehaviour
                 Debug.LogError("Error writing data " + task.Exception);
                 return;
             }
+            
 
             Debug.Log("[LIST] Updated user access to add " + currentUser.userID + " to " +listKey);
         });
@@ -653,7 +654,6 @@ public class FirebaseManager : MonoBehaviour
                 refListName.ChildChanged += HandleListUpdate;
                 refListName.ChildRemoved += HandleListDelete;
 
-
                 CreateEmptyItem();
             });
     }
@@ -701,6 +701,21 @@ public class FirebaseManager : MonoBehaviour
     public void DeleteList(string listKey)
     {
         Debug.LogFormat("[LIST] Deleting list {0} ", listKey);
+
+        reference.Child("Users").Child(currentUser.userID).Child("Lists").Child(listKey).RemoveValueAsync().ContinueWithOnMainThread(task => {
+
+            if (task.IsCanceled)
+            {
+                Debug.LogError("Task cancelled");
+                return;
+            }
+            if (task.IsFaulted)
+            {
+                Debug.LogError("Error writing data " + task.Exception);
+                return;
+            }
+        });
+
         reference.Child("Lists").Child(listKey).RemoveValueAsync().ContinueWithOnMainThread(task => {
 
             if (task.IsCanceled)
