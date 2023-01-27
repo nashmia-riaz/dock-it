@@ -466,6 +466,7 @@ public class FirebaseManager : MonoBehaviour
                     return;
                 }
 
+                ListManager.instance.UpdateListName(listKey, newName);
                 Debug.LogFormat("[LIST] List Name Update Complete {0} {1} {2}" ,task.IsCompleted, newName, listKey);
                 UIHandler.instance.UpdateListNameInScrollview(listKey, newName);
             });
