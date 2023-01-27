@@ -377,6 +377,11 @@ public class UIHandler : MonoBehaviour
             DestroyImmediate(listName.gameObject);
     }
 
+    public void OpenUrl(string url)
+    {
+        Application.OpenURL(url);
+    }
+
     public void OnClickDeleteList(GameObject list)
     {
         string listKey = list.name;
