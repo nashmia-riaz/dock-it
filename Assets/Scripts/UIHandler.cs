@@ -199,7 +199,11 @@ public class UIHandler : MonoBehaviour
     {
         GameObject listItem = Instantiate(ListItemPrefab, ListScrollView);
         listItem.transform.name = itemKey;
-        listItem.transform.SetSiblingIndex(listItem.transform.childCount - 2);
+        Debug.LogFormat("Item children {0}", listItem.transform.childCount);
+        //listItem.transform.SetSiblingIndex(listItem.transform.childCount - 2);
+        
+        if(ListScrollView.childCount > 1)
+            listItem.transform.SetSiblingIndex(1);
 
         Image checkmark = listItem.transform.Find("List Details").Find("Check").GetComponent<Image>();
         SetCheckmarkImage(checkmark, item.checkmark);
@@ -376,10 +380,10 @@ public class UIHandler : MonoBehaviour
     {
         while (ListScrollView.transform.childCount > 1)
         {
-            if (ListScrollView.transform.GetChild(0).name != "Add list Item")
+            if (ListScrollView.transform.GetChild(1).name != "Add list Item")
             {
-                Debug.Log("[LIST ITEMS] Destroying " + ListScrollView.transform.GetChild(0).name);
-                DestroyImmediate(ListScrollView.transform.GetChild(0).gameObject);
+                Debug.Log("[LIST ITEMS] Destroying " + ListScrollView.transform.GetChild(1).name);
+                DestroyImmediate(ListScrollView.transform.GetChild(1).gameObject);
                 
             }
         }
