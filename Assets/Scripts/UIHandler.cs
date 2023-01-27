@@ -432,11 +432,20 @@ public class UIHandler : MonoBehaviour
 
     public void UpdateListNameInScrollview(string key, string name)
     {
-        for(int i = 0; i < ListNameScrollView.transform.childCount; i++)
+        for (int i = 0; i < ListNameScrollView.transform.childCount; i++)
         {
             Transform childName = ListNameScrollView.transform.GetChild(i);
             if (childName.name == key)
+            {
                 childName.Find("List Name").GetComponent<TMP_Text>().text = name;
+
+                Button listNameButton = childName.GetComponent<Button>();
+                listNameButton.onClick.RemoveAllListeners();
+                listNameButton.onClick.AddListener(()=> {
+                    UpdateListNameCurrent(name);
+                    SwitchList(childName.gameObject);
+                });
+            }
         }
     }
 
