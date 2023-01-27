@@ -48,7 +48,7 @@ public class UIHandler : MonoBehaviour
     TMP_InputField resetPasswordEmail, shareListLink, importListIF;
 
     [SerializeField]
-    Color success, fail;
+    Color success, fail, textColor;
 
     [SerializeField]
     Sprite trueCheckmark, emptyCheckmark;
@@ -199,7 +199,8 @@ public class UIHandler : MonoBehaviour
     {
         GameObject listItem = Instantiate(ListItemPrefab, ListScrollView);
         listItem.transform.name = itemKey;
-        listItem.transform.SetSiblingIndex(listItem.transform.childCount - 2);
+        Debug.LogFormat("Item children {0}", listItem.transform.childCount);
+        listItem.transform.SetSiblingIndex(1);
 
         Image checkmark = listItem.transform.Find("List Details").Find("Check").GetComponent<Image>();
         SetCheckmarkImage(checkmark, item.checkmark);
@@ -212,12 +213,22 @@ public class UIHandler : MonoBehaviour
         TMP_InputField task = listItem.transform.Find("List Details").Find("Task").GetComponent<TMP_InputField>();
         task.onEndEdit.AddListener(delegate { OnEditTask(task); });
 
+        //if it is ticked
+        if (!item.checkmark && checkmark.sprite.name == trueCheckmark.name)
+        {
+            task.textComponent.color *= new Color(1, 1, 1, 0.5f);
+            task.text = "<s>" + item.task + "</s>";
+        }
+        else
+        {
+            listItem.transform.Find("List Details").Find("Task").GetComponent<TMP_InputField>().text = item.task;
+        }
+
         Button deleteButton = listItem.transform.Find("Delete").GetComponent<Button>();
         deleteButton.onClick.AddListener(()=> {
             OnDeleteItem(listItem);
         });
 
-        listItem.transform.Find("List Details").Find("Task").GetComponent<TMP_InputField>().text = item.task;
     }
 
     void OnDeleteItem(GameObject listItem)
@@ -376,10 +387,10 @@ public class UIHandler : MonoBehaviour
     {
         while (ListScrollView.transform.childCount > 1)
         {
-            if (ListScrollView.transform.GetChild(0).name != "Add list Item")
+            if (ListScrollView.transform.GetChild(1).name != "Add list Item")
             {
-                Debug.Log("[LIST ITEMS] Destroying " + ListScrollView.transform.GetChild(0).name);
-                DestroyImmediate(ListScrollView.transform.GetChild(0).gameObject);
+                Debug.Log("[LIST ITEMS] Destroying " + ListScrollView.transform.GetChild(1).name);
+                DestroyImmediate(ListScrollView.transform.GetChild(1).gameObject);
                 
             }
         }
@@ -403,6 +414,8 @@ public class UIHandler : MonoBehaviour
             Color listColor = listID.GetComponent<Image>().color;
             listID.GetComponent<Image>().color = new Color(listColor.r, listColor.g, listColor.b, 1);
         }
+
+        PlayerPrefs.SetString("CurrentList", listID.name);
 
         LoadCurrentList();
         OnHideMenu();
@@ -524,7 +537,7 @@ public class UIHandler : MonoBehaviour
 
     void SetCheckmarkImage(Image image, bool state)
     {
-        if (state)
+        if (!state)
         {
             image.sprite = trueCheckmark;
         }
@@ -546,7 +559,23 @@ public class UIHandler : MonoBehaviour
                 SetCheckmarkImage(checkmark, item.checkmark);
 
                 TMP_InputField task = itemObj.Find("List Details").Find("Task").GetComponent<TMP_InputField>();
-                task.text = item.task;
+                
+                //if it is ticked
+                if (!item.checkmark && checkmark.sprite.name == trueCheckmark.name)
+                {
+                    task.textComponent.color = textColor * new Color(1, 1, 1, 0.5f);
+                    task.text = "<s>"+ item.task + "</s>";
+                    itemObj.SetAsLastSibling();
+                }
+                else if(item.checkmark && checkmark.sprite.name == emptyCheckmark.name)
+                {
+                    task.textComponent.color = textColor;
+                    task.text = item.task;
+                    itemObj.SetSiblingIndex(1);
+                }else 
+                { 
+                    task.text = item.task; 
+                }
 
                 break;
             }
@@ -560,12 +589,12 @@ public class UIHandler : MonoBehaviour
 
         if(checkmarkImage.sprite.name == "Checkmark True")
         {
-            state = false;
+            state = true;
             checkmarkImage.sprite = emptyCheckmark;
         }
         else
         {
-            state = true;
+            state = false;
             checkmarkImage.sprite = trueCheckmark;
         }
 
