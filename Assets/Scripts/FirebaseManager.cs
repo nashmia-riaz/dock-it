@@ -244,22 +244,33 @@ public class FirebaseManager : MonoBehaviour
     void FetchLists()
     {
         var taskScheduler = TaskScheduler.FromCurrentSynchronizationContext();
-        reference.Child("Users").Child(currentUser.userID).Child("Lists").GetValueAsync().ContinueWith(task => {
-            if (task.IsFaulted)
+        reference.Child("Users").Child(currentUser.userID).Child("Lists").GetValueAsync().ContinueWith(UserLists => {
+            if (UserLists.IsFaulted)
             {
-                Debug.LogError("Task failed " + task.Exception);
+                Debug.LogError("Task failed " + UserLists.Exception);
             }
-            else if (task.IsCompleted)
+            else if (UserLists.IsCompleted)
             {
-                DataSnapshot snapshot = task.Result;
+                DataSnapshot snapshot = UserLists.Result;
                 IEnumerable<DataSnapshot> lists = snapshot.Children;
+                if(snapshot.ChildrenCount <= 0)
+                {
+                    CreateEmptyList();
+
+                    ListManager.instance.UpdateCurrentList();
+
+                    Debug.Log("[LISTS] Fetched lists");
+                    //UIHandler.instance.LoadCurrentList();
+                    OnAutoSignIn();
+                    return;
+                }
                 long totalLists = snapshot.ChildrenCount;
                 int listProcessed = 0;
 
                 foreach(var list in lists)
                 {
                     string listKey = list.Key.ToString();
-
+                    string shareky = list.Child("shareKey").Value.ToString();
                     reference.Child("Lists").Child(listKey).GetValueAsync().ContinueWith(listTask => {
 
                         if (listTask.IsFaulted)
@@ -269,7 +280,10 @@ public class FirebaseManager : MonoBehaviour
                         else if (listTask.IsCompleted)
                         {
                             DataSnapshot listSnapshot = listTask.Result;
-                            AddListToListManager(listSnapshot);
+                            if(listSnapshot.Child("ShareKey").Value.ToString() == shareky)
+                                AddListToListManager(listSnapshot);
+                            //else if sharekeys don't match and is not owner
+                                //TODO: delete list from users list
                             Debug.Log("Getting list " + listSnapshot.Child("Name").Value.ToString());
                             listProcessed++;
 
@@ -282,6 +296,7 @@ public class FirebaseManager : MonoBehaviour
                                 else
                                 {
                                     UIHandler.instance.LoadListNames();
+                                    UIHandler.instance.SetShareAndRevoke(null);
                                 }
 
                                 Debug.Log("[LISTS] Fetched lists");
@@ -294,22 +309,47 @@ public class FirebaseManager : MonoBehaviour
                 }
             }
         }, taskScheduler);
-
     }
 
-    List AddListToListManager(DataSnapshot list)
+    public void RevokeAccess(string listKey)
+    {
+        string newKey = Helper.GenerateToken(5);
+        reference.Child("Lists").Child(listKey).Child("ShareKey").SetValueAsync(newKey).ContinueWithOnMainThread(task=> {
+            if (task.IsCanceled)
+            {
+                Debug.LogError("Task cancelled");
+                return;
+            }
+            if (task.IsFaulted)
+            {
+                Debug.LogError("Error writing data " + task.Exception);
+                return;
+            }
+
+            reference.Child("Users").Child(currentUser.userID).Child("Lists").Child(listKey).Child("shareKey").SetValueAsync(newKey).ContinueWith(userSK=>{
+                if (userSK.IsCanceled)
+                {
+                    Debug.LogError("Task cancelled");
+                    return;
+                }
+                if (userSK.IsFaulted)
+                {
+                    Debug.LogError("Error writing data " + task.Exception);
+                    return;
+                }
+                    //TODO: revoked access updated
+            });
+
+        });
+    }
+
+       List AddListToListManager(DataSnapshot list)
     {
         List newList = new List(list.Child("Name").Value.ToString());
         newList.Id = list.Key;
 
         newList.Owner = list.Child("Owner").Value.ToString();
-
-        IEnumerable<DataSnapshot> usersAccessForList = list.Child("UsersAccess").Children;
-        foreach (var userID in usersAccessForList)
-        {
-            string userIDString = userID.Value.ToString();
-            newList.AddUserAccess(userIDString);
-        }
+        newList.ShareKey = list.Child("ShareKey").Value.ToString();
 
         var refItems = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(list.Key).Child("Items").OrderByChild("checkmark");
         refItems.ChildAdded += HandleItemAdded;
@@ -319,7 +359,7 @@ public class FirebaseManager : MonoBehaviour
         var refListName = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(list.Key);
         refListName.ChildChanged += HandleListUpdate;
         refListName.ChildRemoved += HandleListDelete;
-        
+
         ListManager.instance.AllLists.Add(newList);
 
         return newList;
@@ -355,22 +395,6 @@ public class FirebaseManager : MonoBehaviour
                 }, taskScheduler);
             }
         }, taskScheduler);
-
-        reference.Child("Lists").Child(listKey).Child("UsersAccess").Child(currentUser.userID).SetValueAsync("").ContinueWith(task=> {
-            if (task.IsCanceled)
-            {
-                Debug.LogError("Task cancelled");
-                return;
-            }
-            if (task.IsFaulted)
-            {
-                Debug.LogError("Error writing data " + task.Exception);
-                return;
-            }
-            
-
-            Debug.Log("[LIST] Updated user access to add " + currentUser.userID + " to " +listKey);
-        });
     }
 
     public void DeleteItem(string itemID)
@@ -444,6 +468,21 @@ public class FirebaseManager : MonoBehaviour
 
             ListManager.instance.UpdateListName(listKey, newName);
         }
+        else if (args.Snapshot.Key.ToString() == "ShareKey")
+        {
+            string listKey = args.Snapshot.Reference.Parent.Key;
+            List list = ListManager.instance.FindListUsingKey(listKey);
+            if (list == null) return;
+
+            if (list.Owner == currentUser.userID) { 
+                //TODO update UI to show access revoked
+                return;
+            }
+            UIHandler.instance.OnListDeleted(listKey);
+            ListManager.instance.RemoveList(listKey);
+            ListManager.instance.UpdateCurrentList();
+            UIHandler.instance.LoadCurrentList();
+        }
     }
 
     public void UpdateListName(string newName)
@@ -467,9 +506,9 @@ public class FirebaseManager : MonoBehaviour
                     return;
                 }
 
-                ListManager.instance.UpdateListName(listKey, newName);
+                List list = ListManager.instance.UpdateListName(listKey, newName);
                 Debug.LogFormat("[LIST] List Name Update Complete {0} {1} {2}" ,task.IsCompleted, newName, listKey);
-                UIHandler.instance.UpdateListNameInScrollview(listKey, newName);
+                UIHandler.instance.UpdateListNameInScrollview(list);
             });
 
     }
@@ -589,8 +628,6 @@ public class FirebaseManager : MonoBehaviour
         List list = new(listName, listKey, currentUser.userID);
         ListManager.instance.currentList = list;
 
-        UserListInfo listInfo = new UserListInfo(listKey, true);
-
         reference.Child("Lists").Child(listKey).Child("Name").
             SetValueAsync(listName).ContinueWithOnMainThread(task =>
             {
@@ -606,25 +643,44 @@ public class FirebaseManager : MonoBehaviour
                 }
 
                 Debug.Log("[LIST] Write Empty List Successful " + task.IsCompleted);
-
-
             });
 
-        reference.Child("Users").Child(currentUser.userID).Child("Lists").Child(listKey).Child("isOwner").SetValueAsync(true)
-            .ContinueWithOnMainThread(task => {
-            if (task.IsCanceled)
-            {
-                Debug.LogError("Task cancelled");
-                return;
-            }
-            if (task.IsFaulted)
-            {
-                Debug.LogError("Error writing data " + task.Exception);
-                return;
-            }
+        //reference.Child("Users").Child(currentUser.userID).Child("Lists").Child(listKey).Child("isOwner").SetValueAsync(true)
+        //    .ContinueWithOnMainThread(task => {
+        //    if (task.IsCanceled)
+        //    {
+        //        Debug.LogError("Task cancelled");
+        //        return;
+        //    }
+        //    if (task.IsFaulted)
+        //    {
+        //        Debug.LogError("Error writing data " + task.Exception);
+        //        return;
+        //    }
 
-            Debug.Log("[USER] added list to user as owner");
+        //    Debug.Log("[USER] added list to user as owner");
+        //});
+
+        UserListInfo listInfo = new UserListInfo(list.ShareKey, true);
+        reference.Child("Users").Child(currentUser.userID).Child("Lists").Child(listKey).SetRawJsonValueAsync(JsonUtility.ToJson(listInfo)).ContinueWithOnMainThread(task=> { 
+        
         });
+
+        reference.Child("Lists").Child(listKey).Child("ShareKey").SetValueAsync(list.ShareKey)
+            .ContinueWithOnMainThread(task => {
+                if (task.IsCanceled)
+                {
+                    Debug.LogError("Task cancelled");
+                    return;
+                }
+                if (task.IsFaulted)
+                {
+                    Debug.LogError("Error writing data " + task.Exception);
+                    return;
+                }
+
+                Debug.Log("[LIST] Share key added " +list.ShareKey);
+            });
 
         reference.Child("Lists").Child(listKey).Child("Owner").SetValueAsync(currentUser.userID).ContinueWithOnMainThread(task =>
             {
@@ -736,12 +792,12 @@ public class FirebaseManager : MonoBehaviour
 }
 
 struct UserListInfo{
-    public string ListKey;
+    public string shareKey;
     public bool isOwner;
 
-    public UserListInfo(string mListKey, bool mIsOwner)
+    public UserListInfo(string mShareKey, bool mIsOwner)
     {
-        ListKey = mListKey;
+        shareKey = mShareKey;
         isOwner = mIsOwner;
     }
 }

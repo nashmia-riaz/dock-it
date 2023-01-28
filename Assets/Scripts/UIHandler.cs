@@ -35,8 +35,9 @@ public class UIHandler : MonoBehaviour
 
     [SerializeField]
     Transform ListScrollView;
+
     [SerializeField]
-    GameObject ListItemPrefab;
+    GameObject ListItemPrefab, AddItemButton;
 
     [SerializeField]
     GameObject ListNamePrefab, ListNameScrollView;
@@ -54,7 +55,13 @@ public class UIHandler : MonoBehaviour
     Sprite trueCheckmark, emptyCheckmark;
 
     [SerializeField]
-    Button ShareListButton;
+    Button ShareListButton, RevokeAccessButton;
+
+    [SerializeField]
+    GameObject revokeAccessPanel;
+
+    [SerializeField]
+    TMP_Text RevokeAccessError;
 
     private void Awake()
     {
@@ -264,8 +271,7 @@ public class UIHandler : MonoBehaviour
             listObj.transform.Find("Delete List").gameObject.SetActive(false);
         }
 
-        UpdateListNameCurrent(list.Name);
-        SwitchList(listObj);
+        SwitchList(listObj, list);
     }
 
     public void LoadListNames()
@@ -288,28 +294,42 @@ public class UIHandler : MonoBehaviour
             bool isOwner = list.Owner == FirebaseManager.instance.currentUser.userID;
             if (isOwner)
             {
-                UpdateShareListLink(list.Id);
-                ShareListButton.interactable = true;
-
                 GameObject deleteButton = listName.transform.Find("Delete List").gameObject;
                 deleteButton.SetActive(true);
                 deleteButton.GetComponent<Button>().onClick.AddListener(() =>
                 {
                     UIHandler.instance.OnClickDeleteList(listName);
                 });
+
             }
             else
             {
                 listName.transform.Find("Delete List").gameObject.SetActive(false);
-                ShareListButton.interactable = false;
-                UpdateShareListLink("");
             }
         }
     }
 
-    public void UpdateShareListLink(string text)
+    public void DeleteCurrentList()
     {
-        shareListLink.text = text;
+        ClearListItems();
+        bool FoundNewList = false;
+        for (int i = 0; i < ListNameScrollView.transform.childCount; i++)
+        {
+            Transform listnameObj = ListNameScrollView.transform.GetChild(i);
+            if (listnameObj.name == ListManager.instance.currentList.Id)
+            {
+                FoundNewList = true;
+                SwitchList(listnameObj.gameObject, ListManager.instance.currentList);
+            }
+        }
+        if (!FoundNewList)
+        {
+            //TODO; show graphic that no list is in system
+        }
+    }
+        public void UpdateShareListLink(ref List list)
+    {
+        shareListLink.text = list.Id + "&" +list.ShareKey;
     }
 
     public void LoadList(List list, bool isOwner)
@@ -330,13 +350,10 @@ public class UIHandler : MonoBehaviour
                 OnClickDeleteList(listName);
             });
 
-            UpdateShareListLink(list.Id);
         }
         else
         {
             listName.transform.Find("Delete List").gameObject.SetActive(false);
-            //disable share list link button
-            UpdateShareListLink(list.Id);
         }
     }
 
@@ -345,12 +362,7 @@ public class UIHandler : MonoBehaviour
         Debug.LogFormat("Deleting list {0} ", listKey);
         if(listKey == ListManager.instance.currentList.Id)
         {
-            while(ListScrollView.transform.childCount > 1)
-            {
-                GameObject item = ListScrollView.transform.GetChild(0).gameObject;
-                if(item)
-                    DestroyImmediate(item);
-            }
+            DeleteCurrentList();
         }
 
         DestroyListName(listKey);
@@ -401,12 +413,13 @@ public class UIHandler : MonoBehaviour
         }
     }
 
-    public void SwitchList(GameObject listID)
+    public void SwitchList(GameObject listID, List list)
     {
-        Debug.Log("[SWITCH LIST] Switching to " + listID.name);
+        Debug.Log("[SWITCH LIST] Switching to " + list.Name);
 
-        ClearListItems();
-        ListManager.instance.FindAndSetCurrentList(listID.name);
+        UpdateListNameCurrent(list.Name);
+
+        ListManager.instance.FindAndSetCurrentList(list.Id);
 
         //update the UI to reflect current focused list
         for (int i = 0; i < ListNameScrollView.transform.childCount; i++)
@@ -422,14 +435,26 @@ public class UIHandler : MonoBehaviour
 
         PlayerPrefs.SetString("CurrentList", listID.name);
 
+        SetShareAndRevoke(list);
+
         LoadCurrentList();
         OnHideMenu();
     }
 
     public void LoadCurrentList()
     {
-        Debug.Log(ListManager.instance.currentList);
-        foreach(Item item in ListManager.instance.currentList.Items)
+        ClearListItems();
+        if (ListManager.instance.currentList == null)
+        {
+            //TODO: UI to show that there is no list in the system
+            AddItemButton.SetActive(false);
+            ListNameInput.text = "NO CURRENT LIST";
+            ListNameInput.readOnly = true;
+            return;
+        }
+        ListNameInput.readOnly = false;
+        AddItemButton.SetActive(true);
+        foreach (Item item in ListManager.instance.currentList.Items)
         {
             AddItem(item, item.id);
         }
@@ -441,8 +466,7 @@ public class UIHandler : MonoBehaviour
         listName.transform.name = list.Id;
         listName.transform.Find("List Name").GetComponent<TMP_Text>().text = list.Name;
         listName.GetComponent<Button>().onClick.AddListener(() => {
-            UpdateListNameCurrent(list.Name);
-            SwitchList(listName);
+            SwitchList(listName, list);
         });
         Debug.Log("[LIST OBJ] Created list name");
         return listName;
@@ -516,22 +540,56 @@ public class UIHandler : MonoBehaviour
             FirebaseManager.instance.UpdateListName(newName);
     }
 
-    public void UpdateListNameInScrollview(string key, string name)
+    public void UpdateListNameInScrollview(List list)
     {
         for (int i = 0; i < ListNameScrollView.transform.childCount; i++)
         {
             Transform childName = ListNameScrollView.transform.GetChild(i);
-            if (childName.name == key)
+            if (childName.name == list.Id)
             {
                 childName.Find("List Name").GetComponent<TMP_Text>().text = name;
 
                 Button listNameButton = childName.GetComponent<Button>();
                 listNameButton.onClick.RemoveAllListeners();
                 listNameButton.onClick.AddListener(()=> {
-                    UpdateListNameCurrent(name);
-                    SwitchList(childName.gameObject);
+                    SwitchList(childName.gameObject, list);
                 });
             }
+        }
+    }
+    public void UpdateRevokeAccessText(string text, bool isSuccessful)
+    {
+        RevokeAccessError.text = text;
+        if (isSuccessful)
+            RevokeAccessError.color = success;
+        else
+            RevokeAccessError.color = fail;
+    }
+    public void SetShareAndRevoke(List list)
+    {
+        if (list == null)
+        {
+            if (ListManager.instance.currentList == null) return;
+            list = ListManager.instance.currentList;
+        }
+
+        if (list.Owner == FirebaseManager.instance.currentUser.userID)
+        {
+            ShareListButton.interactable = true;
+            UpdateShareListLink(ref list);
+
+            revokeAccessPanel.SetActive(true);
+            RevokeAccessButton.onClick.RemoveAllListeners();
+            RevokeAccessButton.onClick.AddListener(()=> {
+                //TODO remove access
+                FirebaseManager.instance.RevokeAccess(list.Id);
+            });
+        }
+        else
+        {
+            ShareListButton.interactable = false;
+
+            revokeAccessPanel.SetActive(false);
         }
     }
 
