@@ -389,9 +389,9 @@ public class FirebaseManager : MonoBehaviour
         return newList;
     }
 
-    public void ImportList(string listKey)
+    public void ImportList(string listKey, string shareKey)
     {
-        //check if list is already in the system before pursuing
+        //TODO: check if list is already in the system before pursuing
         var taskScheduler = TaskScheduler.FromCurrentSynchronizationContext();
         reference.Child("Lists").Child(listKey).GetValueAsync().ContinueWith(task => {
             if (task.IsFaulted)
@@ -400,7 +400,8 @@ public class FirebaseManager : MonoBehaviour
             }
             else if (task.IsCompleted)
             {
-                reference.Child("Users").Child(currentUser.userID).Child("Lists").Child(listKey).Child("isOwner").SetValueAsync(false).ContinueWith(listTask=> {
+                UserListInfo listInfo = new UserListInfo(shareKey, false);
+                reference.Child("Users").Child(currentUser.userID).Child("Lists").Child(listKey).SetRawJsonValueAsync(JsonUtility.ToJson(listInfo)).ContinueWith(listTask=> {
                     if (listTask.IsCanceled)
                     {
                         Debug.LogError("Task cancelled");

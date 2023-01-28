@@ -474,9 +474,11 @@ public class UIHandler : MonoBehaviour
 
     public void OnClickImportList()
     {
-        string listKey = importListIF.text;
+        string shareInput = importListIF.text;
+        string listKey = shareInput.Split("&")[0];
+        string shareKey = shareInput.Split("&")[1];
         if (listKey != "")
-            FirebaseManager.instance.ImportList(listKey);
+            FirebaseManager.instance.ImportList(listKey, shareKey);
     }
 
     public void OnShowImportListPanel()
