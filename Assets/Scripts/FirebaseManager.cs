@@ -241,6 +241,24 @@ public class FirebaseManager : MonoBehaviour
         });
     }
 
+    void DeleteListFromUser(string userID, string listKey)
+    {
+        reference.Child("Users").Child(userID).Child("Lists").Child(listKey).RemoveValueAsync().ContinueWith(task=> {
+            if (task.IsCanceled)
+            {
+                Debug.LogError("Task cancelled");
+                return;
+            }
+            if (task.IsFaulted)
+            {
+                Debug.LogError("Error writing data " + task.Exception);
+                return;
+            }
+
+            Debug.Log("[USER] Removed list successfully");
+        });
+    }
+
     void FetchLists()
     {
         var taskScheduler = TaskScheduler.FromCurrentSynchronizationContext();
@@ -271,6 +289,7 @@ public class FirebaseManager : MonoBehaviour
                 {
                     string listKey = list.Key.ToString();
                     string shareky = list.Child("shareKey").Value.ToString();
+                    bool isOwner = list.Child("isOwner").Value.ToString() == "True";
                     reference.Child("Lists").Child(listKey).GetValueAsync().ContinueWith(listTask => {
 
                         if (listTask.IsFaulted)
@@ -280,10 +299,15 @@ public class FirebaseManager : MonoBehaviour
                         else if (listTask.IsCompleted)
                         {
                             DataSnapshot listSnapshot = listTask.Result;
-                            if(listSnapshot.Child("ShareKey").Value.ToString() == shareky)
+                            if (listSnapshot.Child("ShareKey").Value.ToString() == shareky)
                                 AddListToListManager(listSnapshot);
                             //else if sharekeys don't match and is not owner
-                                //TODO: delete list from users list
+                            //TODO: delete list from users list
+                            else if(listSnapshot.Child("ShareKey").Value.ToString() != shareky 
+                            && !isOwner)
+                            {
+                                DeleteListFromUser(currentUser.userID, listKey);
+                            }
                             Debug.Log("Getting list " + listSnapshot.Child("Name").Value.ToString());
                             listProcessed++;
 
