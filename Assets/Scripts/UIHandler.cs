@@ -37,10 +37,10 @@ public class UIHandler : MonoBehaviour
     Transform ListScrollView;
 
     [SerializeField]
-    GameObject ListItemPrefab, AddItemButton;
+    GameObject ListItemPrefabDark, ListItemPrefabLight, CurrentListItemPrefab, AddItemButton;
 
     [SerializeField]
-    GameObject ListNamePrefab, ListNameScrollView;
+    GameObject ListNamePrefabDark, ListNamePrefabLight, CurrentListNamePrefab, ListNameScrollView;
 
     [SerializeField]
     TMP_Text forgotPasswordErrorText;
@@ -49,7 +49,7 @@ public class UIHandler : MonoBehaviour
     TMP_InputField resetPasswordEmail, shareListLink, importListIF;
 
     [SerializeField]
-    Color success, fail, textColor;
+    Theme darkTheme, lightTheme, currentTheme;
 
     [SerializeField]
     Sprite trueCheckmark, emptyCheckmark;
@@ -63,6 +63,9 @@ public class UIHandler : MonoBehaviour
     [SerializeField]
     TMP_Text RevokeAccessError;
 
+    [SerializeField]
+    bool isLightTheme;
+
     private void Awake()
     {
         if (instance == null)
@@ -75,7 +78,8 @@ public class UIHandler : MonoBehaviour
             Destroy(this);
         }
 
-        //currentPanel = signinPanel;
+        isLightTheme = PlayerPrefs.GetString("Theme") == "Dark"; 
+        SetTheme();
     }
 
     public void LoadingPanelFadeOut()
@@ -120,14 +124,14 @@ public class UIHandler : MonoBehaviour
     {
         loginErrorText.gameObject.SetActive(true);
         loginErrorText.text = error;
-        loginErrorText.color = fail;
+        loginErrorText.color = currentTheme.FailureColor;
     }
 
     public void OnRegisterError(string error)
     {
         registerErrorText.gameObject.SetActive(true);
         registerErrorText.text = error;
-        registerErrorText.color = fail;
+        registerErrorText.color = currentTheme.FailureColor;
     }
 
     public void OnShowResetPasswordPanel()
@@ -157,13 +161,13 @@ public class UIHandler : MonoBehaviour
 
     public void OnResetPasswordError(string error)
     {
-        forgotPasswordErrorText.color = fail;
+        forgotPasswordErrorText.color = currentTheme.FailureColor;
         forgotPasswordErrorText.text = error;
     }
 
     public void OnResetPasswordSuccess(string message)
     {
-        forgotPasswordErrorText.color = success;
+        forgotPasswordErrorText.color = currentTheme.SuccessColor;
         forgotPasswordErrorText.text = message;
     }
 
@@ -204,7 +208,7 @@ public class UIHandler : MonoBehaviour
 
     public void AddItem(Item item, string itemKey)
     {
-        GameObject listItem = Instantiate(ListItemPrefab, ListScrollView);
+        GameObject listItem = Instantiate(CurrentListItemPrefab, ListScrollView);
         listItem.transform.name = itemKey;
         Debug.LogFormat("Item children {0}", listItem.transform.childCount);
         listItem.transform.SetSiblingIndex(1);
@@ -223,7 +227,7 @@ public class UIHandler : MonoBehaviour
         //if it is ticked
         if (!item.checkmark && checkmark.sprite.name == trueCheckmark.name)
         {
-            task.textComponent.color *= new Color(1, 1, 1, 0.5f);
+            task.textComponent.color = currentTheme.TextColor * new Color(1, 1, 1, 0.5f);
             task.text = "<s>" + item.task + "</s>";
         }
         else
@@ -288,7 +292,7 @@ public class UIHandler : MonoBehaviour
 
             if (list.Id != ListManager.instance.currentList.Id)
             {
-                listName.GetComponent<Image>().color *= new Color(1, 1, 1, 0);
+                listName.GetComponent<Image>().color = currentTheme.TextColor * new Color(1, 1, 1, 0);
             }
 
             bool isOwner = list.Owner == FirebaseManager.instance.currentUser.userID;
@@ -338,7 +342,7 @@ public class UIHandler : MonoBehaviour
         
         if (list.Id != ListManager.instance.currentList.Id)
         {
-            listName.GetComponent<Image>().color *= new Color(1, 1, 1, 0);
+            listName.GetComponent<Image>().color = currentTheme.TextColor * new Color(1, 1, 1, 0);
         }
 
         if (isOwner)
@@ -427,10 +431,10 @@ public class UIHandler : MonoBehaviour
             GameObject listNameObj = ListNameScrollView.transform.GetChild(i).gameObject;
             if (listNameObj != listID)
             {
-                listNameObj.GetComponent<Image>().color *= new Color(1, 1, 1, 0);
+                listNameObj.GetComponent<Image>().color = currentTheme.SecondaryColor * new Color(1, 1, 1, 0);
             }
-            Color listColor = listID.GetComponent<Image>().color;
-            listID.GetComponent<Image>().color = new Color(listColor.r, listColor.g, listColor.b, 1);
+
+            listID.GetComponent<Image>().color = currentTheme.SecondaryColor * new Color(1, 1, 1, 1);
         }
 
         PlayerPrefs.SetString("CurrentList", listID.name);
@@ -462,7 +466,7 @@ public class UIHandler : MonoBehaviour
 
     public GameObject CreateListName(List list)
     {
-        GameObject listName = Instantiate(ListNamePrefab, ListNameScrollView.transform);
+        GameObject listName = Instantiate(CurrentListNamePrefab, ListNameScrollView.transform);
         listName.transform.name = list.Id;
         listName.transform.Find("List Name").GetComponent<TMP_Text>().text = list.Name;
         listName.GetComponent<Button>().onClick.AddListener(() => {
@@ -563,9 +567,9 @@ public class UIHandler : MonoBehaviour
     {
         RevokeAccessError.text = text;
         if (isSuccessful)
-            RevokeAccessError.color = success;
+            RevokeAccessError.color = currentTheme.SuccessColor;
         else
-            RevokeAccessError.color = fail;
+            RevokeAccessError.color = currentTheme.FailureColor;
     }
     public void SetShareAndRevoke(List list)
     {
@@ -625,16 +629,16 @@ public class UIHandler : MonoBehaviour
 
                 TMP_InputField task = itemObj.Find("List Details").Find("Task").GetComponent<TMP_InputField>();
                 
-                //if it is ticked
+                //if it is tickeds
                 if (!item.checkmark && checkmark.sprite.name == trueCheckmark.name)
                 {
-                    task.textComponent.color = textColor * new Color(1, 1, 1, 0.5f);
+                    task.textComponent.color = currentTheme.TextColor * new Color(1, 1, 1, 0.5f);
                     task.text = "<s>"+ item.task + "</s>";
                     itemObj.SetAsLastSibling();
                 }
                 else if(item.checkmark && checkmark.sprite.name == emptyCheckmark.name)
                 {
-                    task.textComponent.color = textColor;
+                    task.textComponent.color = currentTheme.TextColor;
                     task.text = item.task;
                     itemObj.SetSiblingIndex(1);
                 }else 
@@ -664,5 +668,74 @@ public class UIHandler : MonoBehaviour
         }
 
         FirebaseManager.instance.UpdateItemCheckmark(checkmarkImage.transform.parent.parent.name, state);
+    }
+
+    public void OnClickSwitchTheme()
+    {
+        isLightTheme = !isLightTheme;
+        SetTheme();
+        UpdateTheme();
+    }
+
+    public void SetTheme()
+    {
+        //if dark theme is current theme
+        if (!isLightTheme)
+        {
+            currentTheme = darkTheme;
+        }
+        else
+        {
+            currentTheme = lightTheme;
+        }
+
+        CurrentListItemPrefab = (isLightTheme) ? ListItemPrefabLight : ListItemPrefabDark;
+        CurrentListNamePrefab = (isLightTheme) ? ListNamePrefabLight : ListNamePrefabDark;
+    }
+
+    [SerializeField]
+    Image ThemeIcon;
+    public void UpdateTheme()
+    {
+        GameObject[] PrimaryObjects = GameObject.FindGameObjectsWithTag("PrimaryUI");
+        GameObject[] SecondaryObjects = GameObject.FindGameObjectsWithTag("SecondaryUI");
+        GameObject[] TextObjects = GameObject.FindGameObjectsWithTag("Text");
+        GameObject[] CheckmarkObjs = GameObject.FindGameObjectsWithTag("Checkmark");
+
+        foreach(GameObject primaryObject in PrimaryObjects)
+        {
+            if (primaryObject.GetComponent<Image>())
+            {
+                primaryObject.GetComponent<Image>().color = currentTheme.PrimaryColor;
+            }
+        }
+
+        foreach (GameObject secondaryObject in SecondaryObjects)
+        {
+            if (secondaryObject.GetComponent<Image>())
+            {
+                secondaryObject.GetComponent<Image>().color = currentTheme.SecondaryColor;
+            }
+        }
+
+        foreach (GameObject textObj in TextObjects)
+        {
+            if (textObj.GetComponent<TMP_Text>())
+            {
+                textObj.GetComponent<TMP_Text>().color = currentTheme.TextColor;
+            }
+            if (textObj.GetComponent<Image>())
+            {
+                textObj.GetComponent<Image>().color = currentTheme.TextColor;
+            }
+        }
+
+        foreach(GameObject checkObj in CheckmarkObjs)
+        {
+            if (checkObj.GetComponent<Image>().sprite.name == "Checkmark False")
+                checkObj.GetComponent<Image>().color = currentTheme.TextColor;
+        }
+
+        ThemeIcon.sprite = currentTheme.ThemeIcon;
     }
 }
