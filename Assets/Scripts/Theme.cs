@@ -9,4 +9,6 @@ public class Theme : ScriptableObject
 
     public Color FailureColor;
     public Color SuccessColor;
+
+    public Sprite ThemeIcon;
 }

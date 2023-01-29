@@ -674,6 +674,7 @@ public class UIHandler : MonoBehaviour
     {
         isLightTheme = !isLightTheme;
         SetTheme();
+        UpdateTheme();
     }
 
     public void SetTheme()
@@ -692,4 +693,49 @@ public class UIHandler : MonoBehaviour
         CurrentListNamePrefab = (isLightTheme) ? ListNamePrefabLight : ListNamePrefabDark;
     }
 
+    [SerializeField]
+    Image ThemeIcon;
+    public void UpdateTheme()
+    {
+        GameObject[] PrimaryObjects = GameObject.FindGameObjectsWithTag("PrimaryUI");
+        GameObject[] SecondaryObjects = GameObject.FindGameObjectsWithTag("SecondaryUI");
+        GameObject[] TextObjects = GameObject.FindGameObjectsWithTag("Text");
+        GameObject[] CheckmarkObjs = GameObject.FindGameObjectsWithTag("Checkmark");
+
+        foreach(GameObject primaryObject in PrimaryObjects)
+        {
+            if (primaryObject.GetComponent<Image>())
+            {
+                primaryObject.GetComponent<Image>().color = currentTheme.PrimaryColor;
+            }
+        }
+
+        foreach (GameObject secondaryObject in SecondaryObjects)
+        {
+            if (secondaryObject.GetComponent<Image>())
+            {
+                secondaryObject.GetComponent<Image>().color = currentTheme.SecondaryColor;
+            }
+        }
+
+        foreach (GameObject textObj in TextObjects)
+        {
+            if (textObj.GetComponent<TMP_Text>())
+            {
+                textObj.GetComponent<TMP_Text>().color = currentTheme.TextColor;
+            }
+            if (textObj.GetComponent<Image>())
+            {
+                textObj.GetComponent<Image>().color = currentTheme.TextColor;
+            }
+        }
+
+        foreach(GameObject checkObj in CheckmarkObjs)
+        {
+            if (checkObj.GetComponent<Image>().sprite.name == "Checkmark False")
+                checkObj.GetComponent<Image>().color = currentTheme.TextColor;
+        }
+
+        ThemeIcon.sprite = currentTheme.ThemeIcon;
+    }
 }
