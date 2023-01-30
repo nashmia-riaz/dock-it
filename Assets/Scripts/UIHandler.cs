@@ -35,11 +35,12 @@ public class UIHandler : MonoBehaviour
 
     [SerializeField]
     Transform ListScrollView;
-    [SerializeField]
-    GameObject ListItemPrefab;
 
     [SerializeField]
-    GameObject ListNamePrefab, ListNameScrollView;
+    GameObject ListItemPrefabDark, ListItemPrefabLight, CurrentListItemPrefab, AddItemButton;
+
+    [SerializeField]
+    GameObject ListNamePrefabDark, ListNamePrefabLight, CurrentListNamePrefab, ListNameScrollView;
 
     [SerializeField]
     TMP_Text forgotPasswordErrorText;
@@ -48,13 +49,22 @@ public class UIHandler : MonoBehaviour
     TMP_InputField resetPasswordEmail, shareListLink, importListIF;
 
     [SerializeField]
-    Color success, fail;
+    Theme darkTheme, lightTheme, currentTheme;
 
     [SerializeField]
     Sprite trueCheckmark, emptyCheckmark;
 
     [SerializeField]
-    Button ShareListButton;
+    Button ShareListButton, RevokeAccessButton;
+
+    [SerializeField]
+    GameObject revokeAccessPanel;
+
+    [SerializeField]
+    TMP_Text RevokeAccessError;
+
+    [SerializeField]
+    bool isLightTheme;
 
     private void Awake()
     {
@@ -68,7 +78,8 @@ public class UIHandler : MonoBehaviour
             Destroy(this);
         }
 
-        //currentPanel = signinPanel;
+        isLightTheme = PlayerPrefs.GetString("Theme") == "Dark"; 
+        SetTheme();
     }
 
     public void LoadingPanelFadeOut()
@@ -113,14 +124,14 @@ public class UIHandler : MonoBehaviour
     {
         loginErrorText.gameObject.SetActive(true);
         loginErrorText.text = error;
-        loginErrorText.color = fail;
+        loginErrorText.color = currentTheme.FailureColor;
     }
 
     public void OnRegisterError(string error)
     {
         registerErrorText.gameObject.SetActive(true);
         registerErrorText.text = error;
-        registerErrorText.color = fail;
+        registerErrorText.color = currentTheme.FailureColor;
     }
 
     public void OnShowResetPasswordPanel()
@@ -150,13 +161,13 @@ public class UIHandler : MonoBehaviour
 
     public void OnResetPasswordError(string error)
     {
-        forgotPasswordErrorText.color = fail;
+        forgotPasswordErrorText.color = currentTheme.FailureColor;
         forgotPasswordErrorText.text = error;
     }
 
     public void OnResetPasswordSuccess(string message)
     {
-        forgotPasswordErrorText.color = success;
+        forgotPasswordErrorText.color = currentTheme.SuccessColor;
         forgotPasswordErrorText.text = message;
     }
 
@@ -197,9 +208,10 @@ public class UIHandler : MonoBehaviour
 
     public void AddItem(Item item, string itemKey)
     {
-        GameObject listItem = Instantiate(ListItemPrefab, ListScrollView);
+        GameObject listItem = Instantiate(CurrentListItemPrefab, ListScrollView);
         listItem.transform.name = itemKey;
-        listItem.transform.SetSiblingIndex(listItem.transform.childCount - 2);
+        Debug.LogFormat("Item children {0}", listItem.transform.childCount);
+        listItem.transform.SetSiblingIndex(1);
 
         Image checkmark = listItem.transform.Find("List Details").Find("Check").GetComponent<Image>();
         SetCheckmarkImage(checkmark, item.checkmark);
@@ -212,12 +224,22 @@ public class UIHandler : MonoBehaviour
         TMP_InputField task = listItem.transform.Find("List Details").Find("Task").GetComponent<TMP_InputField>();
         task.onEndEdit.AddListener(delegate { OnEditTask(task); });
 
+        //if it is ticked
+        if (!item.checkmark && checkmark.sprite.name == trueCheckmark.name)
+        {
+            task.textComponent.color = currentTheme.TextColor * new Color(1, 1, 1, 0.5f);
+            task.text = "<s>" + item.task + "</s>";
+        }
+        else
+        {
+            listItem.transform.Find("List Details").Find("Task").GetComponent<TMP_InputField>().text = item.task;
+        }
+
         Button deleteButton = listItem.transform.Find("Delete").GetComponent<Button>();
         deleteButton.onClick.AddListener(()=> {
             OnDeleteItem(listItem);
         });
 
-        listItem.transform.Find("List Details").Find("Task").GetComponent<TMP_InputField>().text = item.task;
     }
 
     void OnDeleteItem(GameObject listItem)
@@ -237,24 +259,26 @@ public class UIHandler : MonoBehaviour
     {
         Debug.Log("[LIST NAME OBJ] Creating list name + "+ list.Name + " " +list.Id);
         UpdateListNameCurrent(list.Name);
-        GameObject listObj = CreateListName(list.Name, list.Id);
-        
-        if(list.Owner == FirebaseManager.instance.currentUser.userID)
+        GameObject listObj = CreateListName(list);
+
+        GameObject deleteButton = listObj.transform.Find("Delete List").gameObject;
+
+        if (list.Owner == FirebaseManager.instance.currentUser.userID)
         {
-            GameObject deleteButton = listObj.transform.Find("Delete List").gameObject;
-            deleteButton.SetActive(true);
             deleteButton.GetComponent<Button>().onClick.AddListener(() =>
             {
-                UIHandler.instance.OnClickDeleteList(listObj);
+                OnClickDeleteListOwned(listObj);
             });
         }
         else
         {
-            listObj.transform.Find("Delete List").gameObject.SetActive(false);
+            deleteButton.GetComponent<Button>().onClick.AddListener(() =>
+            {
+                OnClickDeleteSharedList(listObj);
+            });
         }
 
-        UpdateListNameCurrent(list.Name);
-        SwitchList(listObj);
+        SwitchList(listObj, list);
     }
 
     public void LoadListNames()
@@ -267,78 +291,63 @@ public class UIHandler : MonoBehaviour
         foreach (List list in ListManager.instance.AllLists)
         {
             Debug.Log("Loading List into UI " + list.Id);
-            GameObject listName = CreateListName(list.Name, list.Id);
+            GameObject listName = CreateListName(list);
 
             if (list.Id != ListManager.instance.currentList.Id)
             {
-                listName.GetComponent<Image>().color *= new Color(1, 1, 1, 0);
+                listName.GetComponent<Image>().color = currentTheme.TextColor * new Color(1, 1, 1, 0);
             }
 
+            GameObject deleteButton = listName.transform.Find("Delete List").gameObject;
             bool isOwner = list.Owner == FirebaseManager.instance.currentUser.userID;
             if (isOwner)
             {
-                UpdateShareListLink(list.Id);
-                ShareListButton.interactable = true;
-
-                GameObject deleteButton = listName.transform.Find("Delete List").gameObject;
-                deleteButton.SetActive(true);
                 deleteButton.GetComponent<Button>().onClick.AddListener(() =>
                 {
-                    UIHandler.instance.OnClickDeleteList(listName);
+                    OnClickDeleteListOwned(listName);
                 });
+
             }
             else
             {
-                listName.transform.Find("Delete List").gameObject.SetActive(false);
-                ShareListButton.interactable = false;
-                UpdateShareListLink("");
+                deleteButton.GetComponent<Button>().onClick.AddListener(() =>
+                {
+                    OnClickDeleteSharedList(listName);
+                });
             }
         }
     }
 
-    public void UpdateShareListLink(string text)
+    public void DeleteCurrentList()
     {
-        shareListLink.text = text;
-    }
-
-    public void LoadList(List list, bool isOwner)
-    {
-        GameObject listName = CreateListName(list.Name, list.Id);
-        
-        if (list.Id != ListManager.instance.currentList.Id)
+        ClearListItems();
+        bool FoundNewList = false;
+        for (int i = 0; i < ListNameScrollView.transform.childCount; i++)
         {
-            listName.GetComponent<Image>().color *= new Color(1, 1, 1, 0);
-        }
-
-        if (isOwner)
-        {
-            GameObject deleteButton = listName.transform.Find("Delete List").gameObject;
-            deleteButton.SetActive(true);
-            deleteButton.GetComponent<Button>().onClick.AddListener(() =>
+            Transform listnameObj = ListNameScrollView.transform.GetChild(i);
+            if (listnameObj.name == ListManager.instance.currentList.Id)
             {
-                OnClickDeleteList(listName);
-            });
-
-            UpdateShareListLink(list.Id);
+                FoundNewList = true;
+                SwitchList(listnameObj.gameObject, ListManager.instance.currentList);
+            }
         }
-        else
+        if (!FoundNewList)
         {
-            listName.transform.Find("Delete List").gameObject.SetActive(false);
-            //disable share list link button
-            UpdateShareListLink(list.Id);
+            //TODO; show graphic that no list is in system
         }
+    }
+        public void UpdateShareListLink(ref List list)
+    {
+        shareListLink.text = list.Id + "&" +list.ShareKey;
     }
 
     public void OnListDeleted(string listKey)
     {
-        Debug.LogFormat("Deleting list {0} ", listKey);
-        if(listKey == ListManager.instance.currentList.Id)
+        if (ListManager.instance.currentList != null)
         {
-            while(ListScrollView.transform.childCount > 1)
+            if (listKey == ListManager.instance.currentList.Id)
             {
-                GameObject item = ListScrollView.transform.GetChild(0).gameObject;
-                if(item)
-                    DestroyImmediate(item);
+                DeleteCurrentList();
             }
         }
 
@@ -366,31 +375,97 @@ public class UIHandler : MonoBehaviour
             DestroyImmediate(listName.gameObject);
     }
 
-    public void OnClickDeleteList(GameObject list)
+    public void OpenUrl(string url)
     {
+        Application.OpenURL(url);
+    }
+
+    [SerializeField]
+    Animator deletePanel;
+    [SerializeField]
+    TMP_Text deleteConfirmationText, deleteErrorText;
+
+    [SerializeField]
+    Button deleteConfirmationButton, deleteDeclineButton;
+    void ShowDeleteConfirmation(string promptText)
+    {
+        deleteConfirmationText.text = promptText;
+        deletePanel.gameObject.SetActive(true);
+    }
+
+    public void OnClickDeleteListOwned(GameObject list)
+    {
+        ShowDeleteConfirmation("Are you sure you want to <b>delete</b> this list completely?<br>This action is irreversible");
         string listKey = list.name;
-        FirebaseManager.instance.DeleteList(listKey);
+
+        deleteConfirmationButton.onClick.RemoveAllListeners();
+        deleteConfirmationButton.onClick.AddListener(() =>
+        {
+            deleteConfirmationButton.interactable = false;
+            deleteConfirmationButton.GetComponent<Animator>().SetTrigger("FadeOut");
+            deleteDeclineButton.GetComponent<Animator>().SetTrigger("FadeOut");
+            FirebaseManager.instance.DeleteList(listKey, true);
+        });
+      
+    }
+
+    public void OnClickDeleteSharedList(GameObject list)
+    {
+        ShowDeleteConfirmation("Are you sure you want to <b>remove</b> this list from the library?");
+        string listKey = list.name;
+
+        deleteConfirmationButton.onClick.RemoveAllListeners();
+        deleteConfirmationButton.onClick.AddListener(() =>
+        {
+            deleteConfirmationButton.interactable = false;
+            deleteConfirmationButton.GetComponent<Animator>().SetTrigger("FadeOut");
+            deleteDeclineButton.GetComponent<Animator>().SetTrigger("FadeOut");
+            FirebaseManager.instance.DeleteListFromUser(FirebaseManager.instance.currentUser.userID, listKey, true);
+        });
+    }
+
+    public void UpdateListDeletionError(string message, bool isSuccessful)
+    { 
+        deleteErrorText.text = message;
+        deleteErrorText.GetComponent<Animator>().SetTrigger("FadeIn");
+        deleteErrorText.color = (isSuccessful) ? currentTheme.SuccessColor : currentTheme.FailureColor;
+        deleteErrorText.gameObject.SetActive(true);
+       }
+
+    public void OnClickCloseDeleteConfirmation()
+    {
+        deleteErrorText.gameObject.SetActive(false);
+        deletePanel.SetTrigger("Slide Out");
+        deleteConfirmationButton.gameObject.SetActive(true);
+        deleteDeclineButton.gameObject.SetActive(true);
+        deleteConfirmationButton.GetComponent<Animator>().SetTrigger("FadeIn");
+        deleteDeclineButton.GetComponent<Animator>().SetTrigger("FadeIn");
+        deleteConfirmationButton.interactable = true;
+        StartCoroutine(Helper.waitBeforeExecution(0.5f, () => {
+            deletePanel.gameObject.SetActive(false);
+        }));
     }
 
     void ClearListItems()
     {
         while (ListScrollView.transform.childCount > 1)
         {
-            if (ListScrollView.transform.GetChild(0).name != "Add list Item")
+            if (ListScrollView.transform.GetChild(1).name != "Add list Item")
             {
-                Debug.Log("[LIST ITEMS] Destroying " + ListScrollView.transform.GetChild(0).name);
-                DestroyImmediate(ListScrollView.transform.GetChild(0).gameObject);
+                Debug.Log("[LIST ITEMS] Destroying " + ListScrollView.transform.GetChild(1).name);
+                DestroyImmediate(ListScrollView.transform.GetChild(1).gameObject);
                 
             }
         }
     }
 
-    public void SwitchList(GameObject listID)
+    public void SwitchList(GameObject listID, List list)
     {
-        Debug.Log("[SWITCH LIST] Switching to " + listID.name);
+        Debug.Log("[SWITCH LIST] Switching to " + list.Name);
 
-        ClearListItems();
-        ListManager.instance.FindAndSetCurrentList(listID.name);
+        UpdateListNameCurrent(list.Name);
+
+        ListManager.instance.FindAndSetCurrentList(list.Id);
 
         //update the UI to reflect current focused list
         for (int i = 0; i < ListNameScrollView.transform.childCount; i++)
@@ -398,11 +473,15 @@ public class UIHandler : MonoBehaviour
             GameObject listNameObj = ListNameScrollView.transform.GetChild(i).gameObject;
             if (listNameObj != listID)
             {
-                listNameObj.GetComponent<Image>().color *= new Color(1, 1, 1, 0);
+                listNameObj.GetComponent<Image>().color = currentTheme.SecondaryColor * new Color(1, 1, 1, 0);
             }
-            Color listColor = listID.GetComponent<Image>().color;
-            listID.GetComponent<Image>().color = new Color(listColor.r, listColor.g, listColor.b, 1);
+
+            listID.GetComponent<Image>().color = currentTheme.SecondaryColor * new Color(1, 1, 1, 1);
         }
+
+        PlayerPrefs.SetString("CurrentList", listID.name);
+
+        SetShareAndRevoke(list);
 
         LoadCurrentList();
         OnHideMenu();
@@ -410,21 +489,30 @@ public class UIHandler : MonoBehaviour
 
     public void LoadCurrentList()
     {
-        Debug.Log(ListManager.instance.currentList);
-        foreach(Item item in ListManager.instance.currentList.Items)
+        ClearListItems();
+        if (ListManager.instance.currentList == null)
+        {
+            //TODO: UI to show that there is no list in the system
+            AddItemButton.SetActive(false);
+            ListNameInput.text = "NO CURRENT LIST";
+            ListNameInput.readOnly = true;
+            return;
+        }
+        ListNameInput.readOnly = false;
+        AddItemButton.SetActive(true);
+        foreach (Item item in ListManager.instance.currentList.Items)
         {
             AddItem(item, item.id);
         }
     }
 
-    public GameObject CreateListName(string name, string id)
+    public GameObject CreateListName(List list)
     {
-        GameObject listName = Instantiate(ListNamePrefab, ListNameScrollView.transform);
-        listName.transform.name = id;
-        listName.transform.Find("List Name").GetComponent<TMP_Text>().text = name;
+        GameObject listName = Instantiate(CurrentListNamePrefab, ListNameScrollView.transform);
+        listName.transform.name = list.Id;
+        listName.transform.Find("List Name").GetComponent<TMP_Text>().text = list.Name;
         listName.GetComponent<Button>().onClick.AddListener(() => {
-            UpdateListNameCurrent(name);
-            SwitchList(listName);
+            SwitchList(listName, list);
         });
         Debug.Log("[LIST OBJ] Created list name");
         return listName;
@@ -432,9 +520,13 @@ public class UIHandler : MonoBehaviour
 
     public void OnClickImportList()
     {
-        string listKey = importListIF.text;
+        string[] shareInput = importListIF.text.Split("&");
+        if (shareInput.Length <= 1)
+            return;
+        string listKey = shareInput[0];
+        string shareKey = shareInput[1];
         if (listKey != "")
-            FirebaseManager.instance.ImportList(listKey);
+            FirebaseManager.instance.ImportList(listKey, shareKey);
     }
 
     public void OnShowImportListPanel()
@@ -498,13 +590,56 @@ public class UIHandler : MonoBehaviour
             FirebaseManager.instance.UpdateListName(newName);
     }
 
-    public void UpdateListNameInScrollview(string key, string name)
+    public void UpdateListNameInScrollview(List list)
     {
-        for(int i = 0; i < ListNameScrollView.transform.childCount; i++)
+        for (int i = 0; i < ListNameScrollView.transform.childCount; i++)
         {
             Transform childName = ListNameScrollView.transform.GetChild(i);
-            if (childName.name == key)
-                childName.Find("List Name").GetComponent<TMP_Text>().text = name;
+            if (childName.name == list.Id)
+            {
+                childName.Find("List Name").GetComponent<TMP_Text>().text = list.Name;
+
+                Button listNameButton = childName.GetComponent<Button>();
+                listNameButton.onClick.RemoveAllListeners();
+                listNameButton.onClick.AddListener(()=> {
+                    SwitchList(childName.gameObject, list);
+                });
+            }
+        }
+    }
+    public void UpdateRevokeAccessText(string text, bool isSuccessful)
+    {
+        RevokeAccessError.text = text;
+        if (isSuccessful)
+            RevokeAccessError.color = currentTheme.SuccessColor;
+        else
+            RevokeAccessError.color = currentTheme.FailureColor;
+    }
+    public void SetShareAndRevoke(List list)
+    {
+        if (list == null)
+        {
+            if (ListManager.instance.currentList == null) return;
+            list = ListManager.instance.currentList;
+        }
+
+        if (list.Owner == FirebaseManager.instance.currentUser.userID)
+        {
+            ShareListButton.interactable = true;
+            UpdateShareListLink(ref list);
+
+            revokeAccessPanel.SetActive(true);
+            RevokeAccessButton.onClick.RemoveAllListeners();
+            RevokeAccessButton.onClick.AddListener(()=> {
+                //TODO remove access
+                FirebaseManager.instance.RevokeAccess(list.Id);
+            });
+        }
+        else
+        {
+            ShareListButton.interactable = false;
+
+            revokeAccessPanel.SetActive(false);
         }
     }
 
@@ -515,7 +650,7 @@ public class UIHandler : MonoBehaviour
 
     void SetCheckmarkImage(Image image, bool state)
     {
-        if (state)
+        if (!state)
         {
             image.sprite = trueCheckmark;
         }
@@ -537,7 +672,23 @@ public class UIHandler : MonoBehaviour
                 SetCheckmarkImage(checkmark, item.checkmark);
 
                 TMP_InputField task = itemObj.Find("List Details").Find("Task").GetComponent<TMP_InputField>();
-                task.text = item.task;
+                
+                //if it is tickeds
+                if (!item.checkmark && checkmark.sprite.name == trueCheckmark.name)
+                {
+                    task.textComponent.color = currentTheme.TextColor * new Color(1, 1, 1, 0.5f);
+                    task.text = "<s>"+ item.task + "</s>";
+                    itemObj.SetAsLastSibling();
+                }
+                else if(item.checkmark && checkmark.sprite.name == emptyCheckmark.name)
+                {
+                    task.textComponent.color = currentTheme.TextColor;
+                    task.text = item.task;
+                    itemObj.SetSiblingIndex(1);
+                }else 
+                { 
+                    task.text = item.task; 
+                }
 
                 break;
             }
@@ -551,15 +702,84 @@ public class UIHandler : MonoBehaviour
 
         if(checkmarkImage.sprite.name == "Checkmark True")
         {
-            state = false;
+            state = true;
             checkmarkImage.sprite = emptyCheckmark;
         }
         else
         {
-            state = true;
+            state = false;
             checkmarkImage.sprite = trueCheckmark;
         }
 
         FirebaseManager.instance.UpdateItemCheckmark(checkmarkImage.transform.parent.parent.name, state);
+    }
+
+    public void OnClickSwitchTheme()
+    {
+        isLightTheme = !isLightTheme;
+        SetTheme();
+        UpdateTheme();
+    }
+
+    public void SetTheme()
+    {
+        //if dark theme is current theme
+        if (!isLightTheme)
+        {
+            currentTheme = darkTheme;
+        }
+        else
+        {
+            currentTheme = lightTheme;
+        }
+
+        CurrentListItemPrefab = (isLightTheme) ? ListItemPrefabLight : ListItemPrefabDark;
+        CurrentListNamePrefab = (isLightTheme) ? ListNamePrefabLight : ListNamePrefabDark;
+    }
+
+    [SerializeField]
+    Image ThemeIcon;
+    public void UpdateTheme()
+    {
+        GameObject[] PrimaryObjects = GameObject.FindGameObjectsWithTag("PrimaryUI");
+        GameObject[] SecondaryObjects = GameObject.FindGameObjectsWithTag("SecondaryUI");
+        GameObject[] TextObjects = GameObject.FindGameObjectsWithTag("Text");
+        GameObject[] CheckmarkObjs = GameObject.FindGameObjectsWithTag("Checkmark");
+
+        foreach(GameObject primaryObject in PrimaryObjects)
+        {
+            if (primaryObject.GetComponent<Image>())
+            {
+                primaryObject.GetComponent<Image>().color = currentTheme.PrimaryColor;
+            }
+        }
+
+        foreach (GameObject secondaryObject in SecondaryObjects)
+        {
+            if (secondaryObject.GetComponent<Image>())
+            {
+                secondaryObject.GetComponent<Image>().color = currentTheme.SecondaryColor;
+            }
+        }
+
+        foreach (GameObject textObj in TextObjects)
+        {
+            if (textObj.GetComponent<TMP_Text>())
+            {
+                textObj.GetComponent<TMP_Text>().color = currentTheme.TextColor;
+            }
+            if (textObj.GetComponent<Image>())
+            {
+                textObj.GetComponent<Image>().color = currentTheme.TextColor;
+            }
+        }
+
+        foreach(GameObject checkObj in CheckmarkObjs)
+        {
+            if (checkObj.GetComponent<Image>().sprite.name == "Checkmark False")
+                checkObj.GetComponent<Image>().color = currentTheme.TextColor;
+        }
+
+        ThemeIcon.sprite = currentTheme.ThemeIcon;
     }
 }
