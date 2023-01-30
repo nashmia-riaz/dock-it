@@ -260,19 +260,22 @@ public class UIHandler : MonoBehaviour
         Debug.Log("[LIST NAME OBJ] Creating list name + "+ list.Name + " " +list.Id);
         UpdateListNameCurrent(list.Name);
         GameObject listObj = CreateListName(list);
-        
-        if(list.Owner == FirebaseManager.instance.currentUser.userID)
+
+        GameObject deleteButton = listObj.transform.Find("Delete List").gameObject;
+
+        if (list.Owner == FirebaseManager.instance.currentUser.userID)
         {
-            GameObject deleteButton = listObj.transform.Find("Delete List").gameObject;
-            deleteButton.SetActive(true);
             deleteButton.GetComponent<Button>().onClick.AddListener(() =>
             {
-                UIHandler.instance.OnClickDeleteList(listObj);
+                OnClickDeleteListOwned(listObj);
             });
         }
         else
         {
-            listObj.transform.Find("Delete List").gameObject.SetActive(false);
+            deleteButton.GetComponent<Button>().onClick.AddListener(() =>
+            {
+                OnClickDeleteSharedList(listObj);
+            });
         }
 
         SwitchList(listObj, list);
@@ -295,20 +298,22 @@ public class UIHandler : MonoBehaviour
                 listName.GetComponent<Image>().color = currentTheme.TextColor * new Color(1, 1, 1, 0);
             }
 
+            GameObject deleteButton = listName.transform.Find("Delete List").gameObject;
             bool isOwner = list.Owner == FirebaseManager.instance.currentUser.userID;
             if (isOwner)
             {
-                GameObject deleteButton = listName.transform.Find("Delete List").gameObject;
-                deleteButton.SetActive(true);
                 deleteButton.GetComponent<Button>().onClick.AddListener(() =>
                 {
-                    UIHandler.instance.OnClickDeleteList(listName);
+                    OnClickDeleteListOwned(listName);
                 });
 
             }
             else
             {
-                listName.transform.Find("Delete List").gameObject.SetActive(false);
+                deleteButton.GetComponent<Button>().onClick.AddListener(() =>
+                {
+                    OnClickDeleteSharedList(listName);
+                });
             }
         }
     }
@@ -336,37 +341,14 @@ public class UIHandler : MonoBehaviour
         shareListLink.text = list.Id + "&" +list.ShareKey;
     }
 
-    public void LoadList(List list, bool isOwner)
-    {
-        GameObject listName = CreateListName(list);
-        
-        if (list.Id != ListManager.instance.currentList.Id)
-        {
-            listName.GetComponent<Image>().color = currentTheme.TextColor * new Color(1, 1, 1, 0);
-        }
-
-        if (isOwner)
-        {
-            GameObject deleteButton = listName.transform.Find("Delete List").gameObject;
-            deleteButton.SetActive(true);
-            deleteButton.GetComponent<Button>().onClick.AddListener(() =>
-            {
-                OnClickDeleteList(listName);
-            });
-
-        }
-        else
-        {
-            listName.transform.Find("Delete List").gameObject.SetActive(false);
-        }
-    }
-
     public void OnListDeleted(string listKey)
     {
-        Debug.LogFormat("Deleting list {0} ", listKey);
-        if(listKey == ListManager.instance.currentList.Id)
+        if (ListManager.instance.currentList != null)
         {
-            DeleteCurrentList();
+            if (listKey == ListManager.instance.currentList.Id)
+            {
+                DeleteCurrentList();
+            }
         }
 
         DestroyListName(listKey);
@@ -398,10 +380,70 @@ public class UIHandler : MonoBehaviour
         Application.OpenURL(url);
     }
 
-    public void OnClickDeleteList(GameObject list)
+    [SerializeField]
+    Animator deletePanel;
+    [SerializeField]
+    TMP_Text deleteConfirmationText, deleteErrorText;
+
+    [SerializeField]
+    Button deleteConfirmationButton, deleteDeclineButton;
+    void ShowDeleteConfirmation(string promptText)
     {
+        deleteConfirmationText.text = promptText;
+        deletePanel.gameObject.SetActive(true);
+    }
+
+    public void OnClickDeleteListOwned(GameObject list)
+    {
+        ShowDeleteConfirmation("Are you sure you want to <b>delete</b> this list completely?<br>This action is irreversible");
         string listKey = list.name;
-        FirebaseManager.instance.DeleteList(listKey);
+
+        deleteConfirmationButton.onClick.RemoveAllListeners();
+        deleteConfirmationButton.onClick.AddListener(() =>
+        {
+            deleteConfirmationButton.interactable = false;
+            deleteConfirmationButton.GetComponent<Animator>().SetTrigger("FadeOut");
+            deleteDeclineButton.GetComponent<Animator>().SetTrigger("FadeOut");
+            FirebaseManager.instance.DeleteList(listKey, true);
+        });
+      
+    }
+
+    public void OnClickDeleteSharedList(GameObject list)
+    {
+        ShowDeleteConfirmation("Are you sure you want to <b>remove</b> this list from the library?");
+        string listKey = list.name;
+
+        deleteConfirmationButton.onClick.RemoveAllListeners();
+        deleteConfirmationButton.onClick.AddListener(() =>
+        {
+            deleteConfirmationButton.interactable = false;
+            deleteConfirmationButton.GetComponent<Animator>().SetTrigger("FadeOut");
+            deleteDeclineButton.GetComponent<Animator>().SetTrigger("FadeOut");
+            FirebaseManager.instance.DeleteListFromUser(FirebaseManager.instance.currentUser.userID, listKey, true);
+        });
+    }
+
+    public void UpdateListDeletionError(string message, bool isSuccessful)
+    { 
+        deleteErrorText.text = message;
+        deleteErrorText.GetComponent<Animator>().SetTrigger("FadeIn");
+        deleteErrorText.color = (isSuccessful) ? currentTheme.SuccessColor : currentTheme.FailureColor;
+        deleteErrorText.gameObject.SetActive(true);
+       }
+
+    public void OnClickCloseDeleteConfirmation()
+    {
+        deleteErrorText.gameObject.SetActive(false);
+        deletePanel.SetTrigger("Slide Out");
+        deleteConfirmationButton.gameObject.SetActive(true);
+        deleteDeclineButton.gameObject.SetActive(true);
+        deleteConfirmationButton.GetComponent<Animator>().SetTrigger("FadeIn");
+        deleteDeclineButton.GetComponent<Animator>().SetTrigger("FadeIn");
+        deleteConfirmationButton.interactable = true;
+        StartCoroutine(Helper.waitBeforeExecution(0.5f, () => {
+            deletePanel.gameObject.SetActive(false);
+        }));
     }
 
     void ClearListItems()
@@ -553,7 +595,7 @@ public class UIHandler : MonoBehaviour
             Transform childName = ListNameScrollView.transform.GetChild(i);
             if (childName.name == list.Id)
             {
-                childName.Find("List Name").GetComponent<TMP_Text>().text = name;
+                childName.Find("List Name").GetComponent<TMP_Text>().text = list.Name;
 
                 Button listNameButton = childName.GetComponent<Button>();
                 listNameButton.onClick.RemoveAllListeners();

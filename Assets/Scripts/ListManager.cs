@@ -148,6 +148,8 @@ public class ListManager : MonoBehaviour
             }
         }
 
+        if (currentList == null) return;
+
         if (key == currentList.Id)
         {
             currentList = null;
@@ -157,7 +159,9 @@ public class ListManager : MonoBehaviour
     public void RemoveItem(string listKey, Item item)
     {
         List list = FindListUsingKey(listKey);
-        list.RemoveItem(item);
+        
+        if(list != null)
+            list.RemoveItem(item);
 
     }
 }
