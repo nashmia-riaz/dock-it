@@ -396,11 +396,13 @@ public class FirebaseManager : MonoBehaviour
                     if (listTask.IsCanceled)
                     {
                         Debug.LogError("Task cancelled");
+                        UIHandler.instance.ShowShareListError("Could not retrieve list!", false);
                         return;
                     }
                     if (listTask.IsFaulted)
                     {
                         Debug.LogError("Error writing data " + task.Exception);
+                        UIHandler.instance.ShowShareListError(task.Exception.InnerException.GetBaseException().Message, false);
                         return;
                     }
 
