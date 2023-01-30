@@ -10,6 +10,9 @@ public class ListManager : MonoBehaviour
 
     public List<List> AllLists = new();
 
+    [SerializeField]
+    bool rorderList = true;
+
     private void Awake()
     {
         if (instance == null)
@@ -59,10 +62,13 @@ public class ListManager : MonoBehaviour
             PlayerPrefs.SetString("CurrentList", currentList.Id);
             UIHandler.instance.UpdateListNameCurrent(currentList.Name);
             Debug.Log("[LIST MANAGER] No list found. Setting to first");
+            return;
         }
+
+        currentList = null;
     }
 
-    List FindListUsingKey(string key)
+    public List FindListUsingKey(string key)
     {
         List toFind = null;
         foreach(List list in AllLists)
@@ -92,21 +98,24 @@ public class ListManager : MonoBehaviour
         }
     }
 
-    public void UpdateListName(string listKey, string listName)
+    public List UpdateListName(string listKey, string listName)
     {
         if (listKey == null || listName == null)
-            return;
+            return null;
 
         List list = FindListUsingKey(listKey);
-        if (list == null) return;
+        if (list == null) return null;
 
         list.Name = listName;
-        UIHandler.instance.UpdateListNameInScrollview(listKey, listName);
+        UIHandler.instance.UpdateListNameInScrollview(list);
 
         if (list == currentList)
         {
             UIHandler.instance.UpdateListNameCurrent(listName);
+            return list;
         }
+
+        return null;
     }
 
     public void UpdateItemInList(string listKey, Item item)
@@ -130,14 +139,29 @@ public class ListManager : MonoBehaviour
 
     public void RemoveList(string key)
     {
-        List list = FindListUsingKey(key);
-        AllLists.Remove(list);
+        foreach(List list in AllLists)
+        {
+            if(list.Id == key)
+            {
+                AllLists.Remove(list);
+                break;
+            }
+        }
+
+        if (currentList == null) return;
+
+        if (key == currentList.Id)
+        {
+            currentList = null;
+        }
     }
 
     public void RemoveItem(string listKey, Item item)
     {
         List list = FindListUsingKey(listKey);
-        list.RemoveItem(item);
+        
+        if(list != null)
+            list.RemoveItem(item);
 
     }
 }

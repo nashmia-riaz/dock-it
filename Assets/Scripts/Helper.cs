@@ -8,6 +8,8 @@ public static class Helper
     const string glyphs = "abcdefghijklmnopqrstuvwxyz0123456789"; //add the characters you want
 
     public delegate void basicFunction();
+
+    public delegate void updateErrorFunction(string message, bool isSuccessful);
     public static IEnumerator waitBeforeExecution(float time, basicFunction toExecute)
     {
         float timer = 0;
