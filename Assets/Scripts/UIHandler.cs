@@ -58,6 +58,9 @@ public class UIHandler : MonoBehaviour
     Button ShareListButton, RevokeAccessButton;
 
     [SerializeField]
+    TMP_Text ShareListErrorText;
+
+    [SerializeField]
     GameObject revokeAccessPanel;
 
     [SerializeField]
@@ -520,11 +523,25 @@ public class UIHandler : MonoBehaviour
 
     public void OnClickImportList()
     {
-        string shareInput = importListIF.text;
-        string listKey = shareInput.Split("&")[0];
-        string shareKey = shareInput.Split("&")[1];
-        if (listKey != "")
-            FirebaseManager.instance.ImportList(listKey, shareKey);
+        string[] shareInput = importListIF.text.Split("&");
+        if (shareInput.Length <= 1)
+        {
+            ShowShareListError("Incorrect link!", false);
+            return;
+        }
+
+        FirebaseManager.instance.ImportList(shareInput[0], shareInput[1]);
+    }
+
+    public void ShowShareListError(string message, bool isSuccessful)
+    {
+        if (!ShareListErrorText.IsActive()) { 
+            ShareListErrorText.gameObject.SetActive(true);
+            ShareListErrorText.GetComponent<Animator>().SetTrigger("FadeIn"); 
+        }
+        ShareListErrorText.text = message;
+        ShareListErrorText.color = (isSuccessful) ? currentTheme.SuccessColor : currentTheme.FailureColor;
+
     }
 
     public void OnShowImportListPanel()
@@ -534,6 +551,7 @@ public class UIHandler : MonoBehaviour
 
     public void OnHideImportListPanel()
     {
+        ShareListErrorText.GetComponent<Animator>().SetTrigger("FadeOut");
         ImportListPanel.SetTrigger("Slide Out");
         StartCoroutine(Helper.waitBeforeExecution(0.5f, () => {
             ImportListPanel.gameObject.SetActive(false);
