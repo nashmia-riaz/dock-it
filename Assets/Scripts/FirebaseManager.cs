@@ -441,14 +441,14 @@ public class FirebaseManager : MonoBehaviour
 
         var refListName = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(listKey);
         refListName.ChildChanged += HandleListUpdate;
-        refListName.ChildRemoved += HandleListDelete;
+        //refListName.ChildRemoved += HandleListDelete;
 
         var refUserList = FirebaseDatabase.DefaultInstance.GetReference("Users").Child(currentUser.userID).
-            Child("Lists").Child(listKey);
+            Child("Lists");
         refUserList.ChildRemoved += HandleListRemovedFromUser;
     }
 
-        public void HandleItemDeleted(object sender, ChildChangedEventArgs args)
+    public void HandleItemDeleted(object sender, ChildChangedEventArgs args)
     {
         if (args.DatabaseError != null)
         {
@@ -456,16 +456,21 @@ public class FirebaseManager : MonoBehaviour
             return;
         }
 
-        string listKey = args.Snapshot.Reference.Parent.Parent.Key;
+        if (args.Snapshot.Reference.Parent.Key == "Items")
+        {
+            string listKey = args.Snapshot.Reference.Parent.Parent.Key;
 
-        string task = args.Snapshot.Child("task").Value.ToString();
-        string checkmark = args.Snapshot.Child("checkmark").Value.ToString();
-        string id = args.Snapshot.Child("id").Value.ToString();
-        Item newItem = new Item(task, checkmark == "True", id);
+            string task = args.Snapshot.Child("task").Value.ToString();
+            string checkmark = args.Snapshot.Child("checkmark").Value.ToString();
+            string id = args.Snapshot.Child("id").Value.ToString();
+            Item newItem = new Item(task, checkmark == "True", id);
 
-        ListManager.instance.RemoveItem(listKey, newItem);
-        if (listKey == ListManager.instance.currentList.Id)
-            UIHandler.instance.RemoveItem(id);
+            ListManager.instance.RemoveItem(listKey, newItem);
+
+            if (ListManager.instance.currentList == null) return;
+            if (listKey == ListManager.instance.currentList.Id)
+                UIHandler.instance.RemoveItem(id);
+        }
     }
 
     void HandleListDelete(object sender, ChildChangedEventArgs args)
@@ -480,6 +485,8 @@ public class FirebaseManager : MonoBehaviour
             string listKey = args.Snapshot.Reference.Parent.Key;
             UIHandler.instance.OnListDeleted(listKey);
             ListManager.instance.RemoveList(listKey);
+            ListManager.instance.UpdateCurrentList();
+            UIHandler.instance.LoadCurrentList();
         }
     }
 
@@ -491,9 +498,14 @@ public class FirebaseManager : MonoBehaviour
             return;
         }
 
-        string listKey = args.Snapshot.Reference.Parent.Key;
-        UIHandler.instance.OnListDeleted(listKey);
-        ListManager.instance.RemoveList(listKey);
+        if (args.Snapshot.Reference.Parent.Key.ToString() == "Lists")
+        {
+            string listKey = args.Snapshot.Key;
+            UIHandler.instance.OnListDeleted(listKey);
+            ListManager.instance.RemoveList(listKey);
+            ListManager.instance.UpdateCurrentList();
+            UIHandler.instance.LoadCurrentList();
+        }
     }
 
     void HandleListUpdate(object sender, ChildChangedEventArgs args)
@@ -776,7 +788,7 @@ public class FirebaseManager : MonoBehaviour
         UIHandler.instance.SwitchToPanel(UIHandler.instance.signinPanel);
     }
 
-    public void DeleteList(string listKey)
+    public void DeleteList(string listKey, bool updateUI)
     {
         Debug.LogFormat("[LIST] Deleting list {0} ", listKey);
 
@@ -794,6 +806,9 @@ public class FirebaseManager : MonoBehaviour
                 Debug.LogError("Error writing data " + task.Exception);
                 return;
             }
+
+            if(updateUI)
+                UIHandler.instance.UpdateListDeletionError("List <b>deleted</b> successfully!", true);        
         });
     }
 }

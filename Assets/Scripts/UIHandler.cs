@@ -395,7 +395,7 @@ public class UIHandler : MonoBehaviour
 
     public void OnClickDeleteListOwned(GameObject list)
     {
-        ShowDeleteConfirmation("Are you sure you want to delete this list completely?");
+        ShowDeleteConfirmation("Are you sure you want to <b>delete</b> this list completely?<br>This action is irreversible");
         string listKey = list.name;
 
         deleteConfirmationButton.onClick.RemoveAllListeners();
@@ -404,14 +404,14 @@ public class UIHandler : MonoBehaviour
             deleteConfirmationButton.interactable = false;
             deleteConfirmationButton.GetComponent<Animator>().SetTrigger("FadeOut");
             deleteDeclineButton.GetComponent<Animator>().SetTrigger("FadeOut");
-            FirebaseManager.instance.DeleteList(listKey);
+            FirebaseManager.instance.DeleteList(listKey, true);
         });
       
     }
 
     public void OnClickDeleteSharedList(GameObject list)
     {
-        ShowDeleteConfirmation("Are you sure you want to remove this list from the library?");
+        ShowDeleteConfirmation("Are you sure you want to <b>remove</b> this list from the library?");
         string listKey = list.name;
 
         deleteConfirmationButton.onClick.RemoveAllListeners();
@@ -436,6 +436,11 @@ public class UIHandler : MonoBehaviour
     {
         deleteErrorText.gameObject.SetActive(false);
         deletePanel.SetTrigger("Slide Out");
+        deleteConfirmationButton.gameObject.SetActive(true);
+        deleteDeclineButton.gameObject.SetActive(true);
+        deleteConfirmationButton.GetComponent<Animator>().SetTrigger("FadeIn");
+        deleteDeclineButton.GetComponent<Animator>().SetTrigger("FadeIn");
+        deleteConfirmationButton.interactable = true;
         StartCoroutine(Helper.waitBeforeExecution(0.5f, () => {
             deletePanel.gameObject.SetActive(false);
         }));
@@ -590,7 +595,7 @@ public class UIHandler : MonoBehaviour
             Transform childName = ListNameScrollView.transform.GetChild(i);
             if (childName.name == list.Id)
             {
-                childName.Find("List Name").GetComponent<TMP_Text>().text = name;
+                childName.Find("List Name").GetComponent<TMP_Text>().text = list.Name;
 
                 Button listNameButton = childName.GetComponent<Button>();
                 listNameButton.onClick.RemoveAllListeners();
