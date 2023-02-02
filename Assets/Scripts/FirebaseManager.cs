@@ -6,6 +6,7 @@ using Firebase.Database;
 using Firebase.Auth;
 using Firebase;
 using System.Threading.Tasks;
+using System;
 
 public class FirebaseManager : MonoBehaviour
 {
@@ -148,7 +149,7 @@ public class FirebaseManager : MonoBehaviour
             Debug.LogFormat("Firebase user created successfully: {0} ({1})",
                 newUser.DisplayName, newUser.UserId);
 
-            OnSignIn(12, newUser, ()=> {
+            OnRegister(12, newUser, ()=> {
                 CreateEmptyList();
             });
 
@@ -176,11 +177,11 @@ public class FirebaseManager : MonoBehaviour
             Debug.LogFormat("User signed in successfully: {0} ({1})",
                 newUser.DisplayName, newUser.UserId);
             currentUser = new User(email, "", "");
-            OnSignIn(12, newUser, ()=> { });
+            OnSignIn(12, newUser);
         });
     }
 
-    void OnSignIn(int tokenSize, FirebaseUser firebaseUser, Helper.basicFunction executeAtEnd)
+    void OnRegister(int tokenSize, FirebaseUser firebaseUser, Action executeAtEnd)
     {
         refreshToken = Helper.GenerateToken(tokenSize);
         PlayerPrefs.SetString("Token", refreshToken);
@@ -189,6 +190,34 @@ public class FirebaseManager : MonoBehaviour
         User user = new User(firebaseUser.Email, firebaseUser.UserId, refreshToken);
         string jsonUser = JsonUtility.ToJson(user);
 
+        reference.Child("Users").Child(firebaseUser.UserId).SetRawJsonValueAsync(jsonUser).
+            ContinueWithOnMainThread(task => {
+                if (task.IsCanceled)
+                {
+                    Debug.LogError("Task cancelled");
+                    return;
+                }
+                if (task.IsFaulted)
+                {
+                    Debug.LogError("Error writing data " + task.Exception);
+                    return;
+                }
+
+                Debug.Log("[USER] Created user info in database");
+                currentUser = user;
+                //OnAutoSignIn();
+                FetchLists();
+            });
+    }
+
+    void OnSignIn(int tokenSize, FirebaseUser firebaseUser)
+    {
+        refreshToken = Helper.GenerateToken(tokenSize);
+        PlayerPrefs.SetString("Token", refreshToken);
+        Debug.Log("Generated new token " + refreshToken);
+
+        User user = new User(firebaseUser.Email, firebaseUser.UserId, refreshToken);
+        
         reference.Child("Users").Child(firebaseUser.UserId).Child("userToken").SetValueAsync(refreshToken).
             ContinueWithOnMainThread(task => {
                 if (task.IsCanceled)
