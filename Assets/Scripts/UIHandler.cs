@@ -80,9 +80,13 @@ public class UIHandler : MonoBehaviour
         {
             Destroy(this);
         }
+    }
 
-        isLightTheme = PlayerPrefs.GetString("Theme") == "Dark"; 
+    private void Start()
+    {
+        isLightTheme = PlayerPrefs.GetString("Theme") == "Light";
         SetTheme();
+        UpdateTheme();
     }
 
     public void LoadingPanelFadeOut()
@@ -788,10 +792,12 @@ public class UIHandler : MonoBehaviour
         if (!isLightTheme)
         {
             currentTheme = darkTheme;
+            PlayerPrefs.SetString("Theme", "Dark");
         }
         else
         {
             currentTheme = lightTheme;
+            PlayerPrefs.SetString("Theme", "Light");
         }
 
         CurrentListItemPrefab = (isLightTheme) ? ListItemPrefabLight : ListItemPrefabDark;
@@ -802,44 +808,30 @@ public class UIHandler : MonoBehaviour
     Image ThemeIcon;
     public void UpdateTheme()
     {
-        GameObject[] PrimaryObjects = GameObject.FindGameObjectsWithTag("PrimaryUI");
-        GameObject[] SecondaryObjects = GameObject.FindGameObjectsWithTag("SecondaryUI");
-        GameObject[] TextObjects = GameObject.FindGameObjectsWithTag("Text");
-        GameObject[] CheckmarkObjs = GameObject.FindGameObjectsWithTag("Checkmark");
+        Image[] imageObjects = GameObject.FindObjectsOfType<Image>(true);
+        TMP_Text[] textObjects = GameObject.FindObjectsOfType<TMP_Text>(true);
 
-        foreach(GameObject primaryObject in PrimaryObjects)
+        foreach(var image in imageObjects)
         {
-            if (primaryObject.GetComponent<Image>())
+            if(image.tag == "PrimaryUI")
+                image.color = currentTheme.PrimaryColor;
+            else if(image.tag == "SecondaryUI")
+                image.color = currentTheme.SecondaryColor;
+            else if (image.tag == "Text")
+                image.color = currentTheme.TextColor; 
+            else if (image.tag == "Checkmark")
             {
-                primaryObject.GetComponent<Image>().color = currentTheme.PrimaryColor;
+                if(image.sprite.name == "Checkmark False")
+                    image.color = currentTheme.TextColor; 
             }
         }
 
-        foreach (GameObject secondaryObject in SecondaryObjects)
+        foreach(var textObj in textObjects)
         {
-            if (secondaryObject.GetComponent<Image>())
-            {
-                secondaryObject.GetComponent<Image>().color = currentTheme.SecondaryColor;
-            }
+            if (textObj.tag == "Text")
+                textObj.color = currentTheme.TextColor;
         }
 
-        foreach (GameObject textObj in TextObjects)
-        {
-            if (textObj.GetComponent<TMP_Text>())
-            {
-                textObj.GetComponent<TMP_Text>().color = currentTheme.TextColor;
-            }
-            if (textObj.GetComponent<Image>())
-            {
-                textObj.GetComponent<Image>().color = currentTheme.TextColor;
-            }
-        }
-
-        foreach(GameObject checkObj in CheckmarkObjs)
-        {
-            if (checkObj.GetComponent<Image>().sprite.name == "Checkmark False")
-                checkObj.GetComponent<Image>().color = currentTheme.TextColor;
-        }
 
         ThemeIcon.sprite = currentTheme.ThemeIcon;
     }

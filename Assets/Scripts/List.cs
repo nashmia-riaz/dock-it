@@ -5,6 +5,7 @@ using UnityEngine;
 public class List
 {
     List<Item> _items;
+    List<string> _usersAccess;
     string _id;
     string _name;
     string _owner;
@@ -14,11 +15,13 @@ public class List
     {
         this._name = name;
         _items = new List<Item>();
+        _usersAccess = new List<string>();
     }
 
     public List(string name, string id, string userCreated)
     {
         _items = new List<Item>();
+        _usersAccess = new List<string>();
 
         _name = name;
         _id = id;
@@ -29,6 +32,21 @@ public class List
     public void AddItem(Item item)
     {
         _items.Add(item);
+    }
+
+    public void AddUser(string user)
+    {
+        _usersAccess.Add(user);
+    }
+
+    public void RemoveUser(string user)
+    {
+        _usersAccess.Remove(user);
+    }
+
+    public void ClearUsers()
+    {
+        _usersAccess.Clear();
     }
 
     public void RemoveItem(Item item) {

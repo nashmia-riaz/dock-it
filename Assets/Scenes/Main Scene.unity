@@ -2147,7 +2147,7 @@ GameObject:
   - component: {fileID: 290549980}
   m_Layer: 5
   m_Name: Text
-  m_TagString: Untagged
+  m_TagString: Text
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -3924,7 +3924,7 @@ GameObject:
   - component: {fileID: 446584680}
   m_Layer: 5
   m_Name: Image
-  m_TagString: Untagged
+  m_TagString: Text
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -5720,7 +5720,7 @@ GameObject:
   - component: {fileID: 614895194}
   m_Layer: 5
   m_Name: SIGN UP
-  m_TagString: Text
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -5799,7 +5799,7 @@ MonoBehaviour:
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
   m_Interactable: 1
-  m_TargetGraphic: {fileID: 912029664}
+  m_TargetGraphic: {fileID: 0}
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
@@ -11723,7 +11723,7 @@ GameObject:
   - component: {fileID: 1179700269}
   m_Layer: 5
   m_Name: LOGIN
-  m_TagString: Text
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -11802,7 +11802,7 @@ MonoBehaviour:
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
   m_Interactable: 1
-  m_TargetGraphic: {fileID: 155030732}
+  m_TargetGraphic: {fileID: 0}
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
@@ -12738,7 +12738,7 @@ GameObject:
   - component: {fileID: 1258384208}
   m_Layer: 5
   m_Name: Email Input
-  m_TagString: Untagged
+  m_TagString: SecondaryUI
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -18461,7 +18461,7 @@ GameObject:
   - component: {fileID: 1979476268}
   m_Layer: 5
   m_Name: Image
-  m_TagString: Untagged
+  m_TagString: Text
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

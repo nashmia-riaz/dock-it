@@ -189,7 +189,7 @@ public class FirebaseManager : MonoBehaviour
         User user = new User(firebaseUser.Email, firebaseUser.UserId, refreshToken);
         string jsonUser = JsonUtility.ToJson(user);
 
-        reference.Child("Users").Child(firebaseUser.UserId).SetRawJsonValueAsync(jsonUser).
+        reference.Child("Users").Child(firebaseUser.UserId).Child("userToken").SetValueAsync(refreshToken).
             ContinueWithOnMainThread(task => {
                 if (task.IsCanceled)
                 {
@@ -366,6 +366,12 @@ public class FirebaseManager : MonoBehaviour
         AttachFirebaseFunctions(newList.Id);
         ListManager.instance.AllLists.Add(newList);
 
+        IEnumerable<DataSnapshot> users = list.Child("UsersAccess").Children;
+        foreach(DataSnapshot user in users)
+        {
+            newList.AddUser(user.Key.ToString());
+        }
+
         return newList;
     }
 
@@ -402,6 +408,24 @@ public class FirebaseManager : MonoBehaviour
                 }, taskScheduler);
             }
         }, taskScheduler);
+
+        reference.Child("Lists").Child(listKey).Child("UsersAccess").Child(currentUser.userID).SetValueAsync(" ").
+            ContinueWith(task =>
+            {
+                if (task.IsCanceled)
+                {
+                    Debug.LogError("Task cancelled");
+                    return;
+                }
+                if (task.IsFaulted)
+                {
+                    Debug.LogError("Error writing data " + task.Exception);
+                    return;
+                }
+
+                Debug.Log("[LIST] Added current user to lists users");
+
+            });
     }
 
     public void DeleteItem(string itemID)
@@ -782,6 +806,12 @@ public class FirebaseManager : MonoBehaviour
     public void DeleteList(string listKey, bool updateUI)
     {
         Debug.LogFormat("[LIST] Deleting list {0} ", listKey);
+
+        List list = ListManager.instance.FindListUsingKey(listKey);
+        if(list != null)
+        {
+            //todo
+        }
 
         DeleteListFromUser(currentUser.userID, listKey, false);
 
