@@ -17,12 +17,12 @@ public class UIHandler : MonoBehaviour
     TMP_InputField emailLogInput, passwordLogInput;
 
     [SerializeField]
-    public Animator LoadingPanel, BlurOverlay, Menu, ResetPasswordPanel, ShareListPanel, ImportListPanel;
+    public Animator LoadingPanel, BlurOverlay, Menu, ResetPasswordPanel, ShareListPanel, ImportListPanel, StartupPanel;
 
     [SerializeField]
     TMP_Text loadingText, userName;
 
-    public Transform mainPanel, signinPanel, registerPanel;
+    public Transform mainPanel, loginPanel, registerPanel, combinedSignupPanel;
 
     [SerializeField]
     Transform currentPanel;
@@ -90,10 +90,58 @@ public class UIHandler : MonoBehaviour
         LoadingPanel.SetTrigger("FadeOut");
 
     }
+
+    public void StartupPanelFadeOut()
+    {
+        StartupPanel.SetTrigger("Start");
+    }
+
     public void LoadingPanelFadeIn(string loadingTextString)
     {
         LoadingPanel.SetTrigger("FadeIn");
         loadingText.text = loadingTextString;
+    }
+
+    public void OnClickStart()
+    {
+        StartupPanel.SetTrigger("FadeOut");
+
+        StartCoroutine(Helper.waitBeforeExecution(1f, ()=> {
+            combinedSignupPanel.gameObject.SetActive(true);
+            combinedSignupPanel.GetComponent<Animator>().SetTrigger("FadeIn");
+        }));
+
+        currentPanel = combinedSignupPanel;
+    }
+
+    [SerializeField]
+    CanvasGroup loginSwitchButton, signupSwitchButton;
+    public void OnSwitchToLogin()
+    {
+        loginSwitchButton.alpha = 1;
+        signupSwitchButton.alpha = 0.5f;
+
+        loginSwitchButton.GetComponent<Button>().interactable = false;
+        signupSwitchButton.GetComponent<Button>().interactable = true;
+
+        loginPanel.gameObject.SetActive(true);
+        loginPanel.GetComponent<Animator>().SetTrigger("FadeIn");
+
+        registerPanel.GetComponent<Animator>().SetTrigger("FadeOut");
+    }
+
+    public void OnSwitchToSignup()
+    {
+        loginSwitchButton.alpha = 0.5f;
+        signupSwitchButton.alpha = 1f;
+
+        loginSwitchButton.GetComponent<Button>().interactable = true;
+        signupSwitchButton.GetComponent<Button>().interactable = false;
+
+        registerPanel.gameObject.SetActive(true);
+        registerPanel.GetComponent<Animator>().SetTrigger("FadeIn");
+
+        loginPanel.GetComponent<Animator>().SetTrigger("FadeOut");
     }
 
     public void OnClickSignUp()
@@ -187,9 +235,6 @@ public class UIHandler : MonoBehaviour
         }
 
         StartCoroutine(Helper.waitBeforeExecution(0.3f, () => {
-            //if(currentPanel != null)
-            //    currentPanel.gameObject.SetActive(false);
-
             nextPanel.gameObject.SetActive(true);
 
             if(nextPanelAnimator != null)

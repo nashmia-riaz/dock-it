@@ -53,43 +53,32 @@ public class FirebaseManager : MonoBehaviour
                 //get root database reference
                 reference = FirebaseDatabase.DefaultInstance.RootReference;
 
-                ////disable loading panel
+                //disable loading panel
                 refreshToken = PlayerPrefs.GetString("Token");
 
-                ////if refreshtoken exists, fetch one from server and compare
+                //if refreshtoken exists, fetch one from server and compare
                 if (refreshToken != "")
                 {
                     Debug.Log("[SIGN IN] Token exists");
                     GetUserBasedOnToken(refreshToken, ()=> {
-                        if (currentUser != null)
+                        if (currentUser != null && currentUser.userToken == refreshToken)
                         {
-                            Debug.Log("[SIGN IN] Current user is not null");
-                            if (currentUser.userToken == refreshToken)
-                            {
-                                Debug.Log("[USER] Signed in using token " + currentUser.userToken);
-                                //OnAutoSignIn();
-                                FetchLists();
-                            }
-                            else
-                            {
-                                Debug.Log("[SIGN IN] Tokens don't match");
-                                
-                                UIHandler.instance.SwitchToPanel(UIHandler.instance.signinPanel);
-                                UIHandler.instance.LoadingPanelFadeOut();
-                            }
+                            Debug.Log("[USER] Signed in using token " + currentUser.userToken);
+                            //OnAutoSignIn();
+                            FetchLists();
                         }
                         else
                         {
                             Debug.Log("[SIGN IN] Current user is null");
 
-                            UIHandler.instance.SwitchToPanel(UIHandler.instance.signinPanel);
+                            UIHandler.instance.SwitchToPanel(UIHandler.instance.StartupPanel.transform);
                             UIHandler.instance.LoadingPanelFadeOut();
                         }
                     });
                 }
                 else
                 {
-                    UIHandler.instance.SwitchToPanel(UIHandler.instance.registerPanel);
+                    UIHandler.instance.SwitchToPanel(UIHandler.instance.StartupPanel.transform);
                     UIHandler.instance.LoadingPanelFadeOut();
                 }
 
@@ -310,7 +299,7 @@ public class FirebaseManager : MonoBehaviour
                             Debug.Log("Getting list " + listSnapshot.Child("Name").Value.ToString());
                             listProcessed++;
 
-                            if(listProcessed == totalLists)
+                            if (listProcessed == totalLists)
                             {
                                 ListManager.instance.UpdateCurrentList();
 
@@ -787,7 +776,7 @@ public class FirebaseManager : MonoBehaviour
     {
         auth.SignOut();
         PlayerPrefs.DeleteKey("Token");
-        UIHandler.instance.SwitchToPanel(UIHandler.instance.signinPanel);
+        UIHandler.instance.SwitchToPanel(UIHandler.instance.StartupPanel.transform);
     }
 
     public void DeleteList(string listKey, bool updateUI)
