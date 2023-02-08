@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,7 +11,7 @@ public static class Helper
     public delegate void basicFunction();
 
     public delegate void updateErrorFunction(string message, bool isSuccessful);
-    public static IEnumerator waitBeforeExecution(float time, basicFunction toExecute)
+    public static IEnumerator waitBeforeExecution(float time, Action toExecute)
     {
         float timer = 0;
         while (timer < time)
@@ -28,7 +29,7 @@ public static class Helper
         
         for (int i = 0; i < length; i++)
         {
-            token += glyphs[Random.Range(0, glyphs.Length)];
+            token += glyphs[UnityEngine.Random.Range(0, glyphs.Length)];
         }
 
         return token;

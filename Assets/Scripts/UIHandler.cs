@@ -17,12 +17,12 @@ public class UIHandler : MonoBehaviour
     TMP_InputField emailLogInput, passwordLogInput;
 
     [SerializeField]
-    public Animator LoadingPanel, BlurOverlay, Menu, ResetPasswordPanel, ShareListPanel, ImportListPanel;
+    public Animator LoadingPanel, BlurOverlay, Menu, ResetPasswordPanel, ShareListPanel, ImportListPanel, StartupPanel;
 
     [SerializeField]
     TMP_Text loadingText, userName;
 
-    public Transform mainPanel, signinPanel, registerPanel;
+    public Transform mainPanel, loginPanel, registerPanel, combinedSignupPanel;
 
     [SerializeField]
     Transform currentPanel;
@@ -80,9 +80,13 @@ public class UIHandler : MonoBehaviour
         {
             Destroy(this);
         }
+    }
 
-        isLightTheme = PlayerPrefs.GetString("Theme") == "Dark"; 
+    private void Start()
+    {
+        isLightTheme = PlayerPrefs.GetString("Theme") == "Light";
         SetTheme();
+        UpdateTheme();
     }
 
     public void LoadingPanelFadeOut()
@@ -90,10 +94,58 @@ public class UIHandler : MonoBehaviour
         LoadingPanel.SetTrigger("FadeOut");
 
     }
+
+    public void StartupPanelFadeOut()
+    {
+        StartupPanel.SetTrigger("Start");
+    }
+
     public void LoadingPanelFadeIn(string loadingTextString)
     {
         LoadingPanel.SetTrigger("FadeIn");
         loadingText.text = loadingTextString;
+    }
+
+    public void OnClickStart()
+    {
+        StartupPanel.SetTrigger("FadeOut");
+
+        StartCoroutine(Helper.waitBeforeExecution(1f, ()=> {
+            combinedSignupPanel.gameObject.SetActive(true);
+            combinedSignupPanel.GetComponent<Animator>().SetTrigger("FadeIn");
+        }));
+
+        currentPanel = combinedSignupPanel;
+    }
+
+    [SerializeField]
+    CanvasGroup loginSwitchButton, signupSwitchButton;
+    public void OnSwitchToLogin()
+    {
+        loginSwitchButton.alpha = 1;
+        signupSwitchButton.alpha = 0.5f;
+
+        loginSwitchButton.GetComponent<Button>().interactable = false;
+        signupSwitchButton.GetComponent<Button>().interactable = true;
+
+        loginPanel.gameObject.SetActive(true);
+        loginPanel.GetComponent<Animator>().SetTrigger("FadeIn");
+
+        registerPanel.GetComponent<Animator>().SetTrigger("FadeOut");
+    }
+
+    public void OnSwitchToSignup()
+    {
+        loginSwitchButton.alpha = 0.5f;
+        signupSwitchButton.alpha = 1f;
+
+        loginSwitchButton.GetComponent<Button>().interactable = true;
+        signupSwitchButton.GetComponent<Button>().interactable = false;
+
+        registerPanel.gameObject.SetActive(true);
+        registerPanel.GetComponent<Animator>().SetTrigger("FadeIn");
+
+        loginPanel.GetComponent<Animator>().SetTrigger("FadeOut");
     }
 
     public void OnClickSignUp()
@@ -187,9 +239,6 @@ public class UIHandler : MonoBehaviour
         }
 
         StartCoroutine(Helper.waitBeforeExecution(0.3f, () => {
-            //if(currentPanel != null)
-            //    currentPanel.gameObject.SetActive(false);
-
             nextPanel.gameObject.SetActive(true);
 
             if(nextPanelAnimator != null)
@@ -743,10 +792,12 @@ public class UIHandler : MonoBehaviour
         if (!isLightTheme)
         {
             currentTheme = darkTheme;
+            PlayerPrefs.SetString("Theme", "Dark");
         }
         else
         {
             currentTheme = lightTheme;
+            PlayerPrefs.SetString("Theme", "Light");
         }
 
         CurrentListItemPrefab = (isLightTheme) ? ListItemPrefabLight : ListItemPrefabDark;
@@ -757,44 +808,30 @@ public class UIHandler : MonoBehaviour
     Image ThemeIcon;
     public void UpdateTheme()
     {
-        GameObject[] PrimaryObjects = GameObject.FindGameObjectsWithTag("PrimaryUI");
-        GameObject[] SecondaryObjects = GameObject.FindGameObjectsWithTag("SecondaryUI");
-        GameObject[] TextObjects = GameObject.FindGameObjectsWithTag("Text");
-        GameObject[] CheckmarkObjs = GameObject.FindGameObjectsWithTag("Checkmark");
+        Image[] imageObjects = GameObject.FindObjectsOfType<Image>(true);
+        TMP_Text[] textObjects = GameObject.FindObjectsOfType<TMP_Text>(true);
 
-        foreach(GameObject primaryObject in PrimaryObjects)
+        foreach(var image in imageObjects)
         {
-            if (primaryObject.GetComponent<Image>())
+            if(image.tag == "PrimaryUI")
+                image.color = currentTheme.PrimaryColor;
+            else if(image.tag == "SecondaryUI")
+                image.color = currentTheme.SecondaryColor;
+            else if (image.tag == "Text")
+                image.color = currentTheme.TextColor; 
+            else if (image.tag == "Checkmark")
             {
-                primaryObject.GetComponent<Image>().color = currentTheme.PrimaryColor;
+                if(image.sprite.name == "Checkmark False")
+                    image.color = currentTheme.TextColor; 
             }
         }
 
-        foreach (GameObject secondaryObject in SecondaryObjects)
+        foreach(var textObj in textObjects)
         {
-            if (secondaryObject.GetComponent<Image>())
-            {
-                secondaryObject.GetComponent<Image>().color = currentTheme.SecondaryColor;
-            }
+            if (textObj.tag == "Text")
+                textObj.color = currentTheme.TextColor;
         }
 
-        foreach (GameObject textObj in TextObjects)
-        {
-            if (textObj.GetComponent<TMP_Text>())
-            {
-                textObj.GetComponent<TMP_Text>().color = currentTheme.TextColor;
-            }
-            if (textObj.GetComponent<Image>())
-            {
-                textObj.GetComponent<Image>().color = currentTheme.TextColor;
-            }
-        }
-
-        foreach(GameObject checkObj in CheckmarkObjs)
-        {
-            if (checkObj.GetComponent<Image>().sprite.name == "Checkmark False")
-                checkObj.GetComponent<Image>().color = currentTheme.TextColor;
-        }
 
         ThemeIcon.sprite = currentTheme.ThemeIcon;
     }

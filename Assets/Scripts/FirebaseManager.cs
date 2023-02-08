@@ -6,6 +6,7 @@ using Firebase.Database;
 using Firebase.Auth;
 using Firebase;
 using System.Threading.Tasks;
+using System;
 
 public class FirebaseManager : MonoBehaviour
 {
@@ -53,43 +54,32 @@ public class FirebaseManager : MonoBehaviour
                 //get root database reference
                 reference = FirebaseDatabase.DefaultInstance.RootReference;
 
-                ////disable loading panel
+                //disable loading panel
                 refreshToken = PlayerPrefs.GetString("Token");
 
-                ////if refreshtoken exists, fetch one from server and compare
+                //if refreshtoken exists, fetch one from server and compare
                 if (refreshToken != "")
                 {
                     Debug.Log("[SIGN IN] Token exists");
                     GetUserBasedOnToken(refreshToken, ()=> {
-                        if (currentUser != null)
+                        if (currentUser != null && currentUser.userToken == refreshToken)
                         {
-                            Debug.Log("[SIGN IN] Current user is not null");
-                            if (currentUser.userToken == refreshToken)
-                            {
-                                Debug.Log("[USER] Signed in using token " + currentUser.userToken);
-                                //OnAutoSignIn();
-                                FetchLists();
-                            }
-                            else
-                            {
-                                Debug.Log("[SIGN IN] Tokens don't match");
-                                
-                                UIHandler.instance.SwitchToPanel(UIHandler.instance.signinPanel);
-                                UIHandler.instance.LoadingPanelFadeOut();
-                            }
+                            Debug.Log("[USER] Signed in using token " + currentUser.userToken);
+                            //OnAutoSignIn();
+                            FetchLists();
                         }
                         else
                         {
                             Debug.Log("[SIGN IN] Current user is null");
 
-                            UIHandler.instance.SwitchToPanel(UIHandler.instance.signinPanel);
+                            UIHandler.instance.SwitchToPanel(UIHandler.instance.StartupPanel.transform);
                             UIHandler.instance.LoadingPanelFadeOut();
                         }
                     });
                 }
                 else
                 {
-                    UIHandler.instance.SwitchToPanel(UIHandler.instance.registerPanel);
+                    UIHandler.instance.SwitchToPanel(UIHandler.instance.StartupPanel.transform);
                     UIHandler.instance.LoadingPanelFadeOut();
                 }
 
@@ -159,7 +149,7 @@ public class FirebaseManager : MonoBehaviour
             Debug.LogFormat("Firebase user created successfully: {0} ({1})",
                 newUser.DisplayName, newUser.UserId);
 
-            OnSignIn(12, newUser, ()=> {
+            OnRegister(12, newUser, ()=> {
                 CreateEmptyList();
             });
 
@@ -187,11 +177,11 @@ public class FirebaseManager : MonoBehaviour
             Debug.LogFormat("User signed in successfully: {0} ({1})",
                 newUser.DisplayName, newUser.UserId);
             currentUser = new User(email, "", "");
-            OnSignIn(12, newUser, ()=> { });
+            OnSignIn(12, newUser);
         });
     }
 
-    void OnSignIn(int tokenSize, FirebaseUser firebaseUser, Helper.basicFunction executeAtEnd)
+    void OnRegister(int tokenSize, FirebaseUser firebaseUser, Action executeAtEnd)
     {
         refreshToken = Helper.GenerateToken(tokenSize);
         PlayerPrefs.SetString("Token", refreshToken);
@@ -201,6 +191,34 @@ public class FirebaseManager : MonoBehaviour
         string jsonUser = JsonUtility.ToJson(user);
 
         reference.Child("Users").Child(firebaseUser.UserId).SetRawJsonValueAsync(jsonUser).
+            ContinueWithOnMainThread(task => {
+                if (task.IsCanceled)
+                {
+                    Debug.LogError("Task cancelled");
+                    return;
+                }
+                if (task.IsFaulted)
+                {
+                    Debug.LogError("Error writing data " + task.Exception);
+                    return;
+                }
+
+                Debug.Log("[USER] Created user info in database");
+                currentUser = user;
+                //OnAutoSignIn();
+                FetchLists();
+            });
+    }
+
+    void OnSignIn(int tokenSize, FirebaseUser firebaseUser)
+    {
+        refreshToken = Helper.GenerateToken(tokenSize);
+        PlayerPrefs.SetString("Token", refreshToken);
+        Debug.Log("Generated new token " + refreshToken);
+
+        User user = new User(firebaseUser.Email, firebaseUser.UserId, refreshToken);
+        
+        reference.Child("Users").Child(firebaseUser.UserId).Child("userToken").SetValueAsync(refreshToken).
             ContinueWithOnMainThread(task => {
                 if (task.IsCanceled)
                 {
@@ -310,7 +328,7 @@ public class FirebaseManager : MonoBehaviour
                             Debug.Log("Getting list " + listSnapshot.Child("Name").Value.ToString());
                             listProcessed++;
 
-                            if(listProcessed == totalLists)
+                            if (listProcessed == totalLists)
                             {
                                 ListManager.instance.UpdateCurrentList();
 
@@ -377,6 +395,12 @@ public class FirebaseManager : MonoBehaviour
         AttachFirebaseFunctions(newList.Id);
         ListManager.instance.AllLists.Add(newList);
 
+        IEnumerable<DataSnapshot> users = list.Child("UsersAccess").Children;
+        foreach(DataSnapshot user in users)
+        {
+            newList.AddUser(user.Key.ToString());
+        }
+
         return newList;
     }
 
@@ -413,6 +437,24 @@ public class FirebaseManager : MonoBehaviour
                 }, taskScheduler);
             }
         }, taskScheduler);
+
+        reference.Child("Lists").Child(listKey).Child("UsersAccess").Child(currentUser.userID).SetValueAsync(" ").
+            ContinueWith(task =>
+            {
+                if (task.IsCanceled)
+                {
+                    Debug.LogError("Task cancelled");
+                    return;
+                }
+                if (task.IsFaulted)
+                {
+                    Debug.LogError("Error writing data " + task.Exception);
+                    return;
+                }
+
+                Debug.Log("[LIST] Added current user to lists users");
+
+            });
     }
 
     public void DeleteItem(string itemID)
@@ -787,12 +829,18 @@ public class FirebaseManager : MonoBehaviour
     {
         auth.SignOut();
         PlayerPrefs.DeleteKey("Token");
-        UIHandler.instance.SwitchToPanel(UIHandler.instance.signinPanel);
+        UIHandler.instance.SwitchToPanel(UIHandler.instance.StartupPanel.transform);
     }
 
     public void DeleteList(string listKey, bool updateUI)
     {
         Debug.LogFormat("[LIST] Deleting list {0} ", listKey);
+
+        List list = ListManager.instance.FindListUsingKey(listKey);
+        if(list != null)
+        {
+            //todo
+        }
 
         DeleteListFromUser(currentUser.userID, listKey, false);
 
