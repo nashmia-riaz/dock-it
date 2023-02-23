@@ -358,7 +358,8 @@ public class FirebaseManager : MonoBehaviour
     public void RevokeAccess(string listKey)
     {
         string newKey = Helper.GenerateToken(5);
-        reference.Child("Lists").Child(listKey).Child("ShareKey").SetValueAsync(newKey).ContinueWithOnMainThread(task=> {
+        var taskScheduler = TaskScheduler.FromCurrentSynchronizationContext();
+        reference.Child("Lists").Child(listKey).Child("ShareKey").SetValueAsync(newKey).ContinueWith(task=> {
             if (task.IsCanceled)
             {
                 Debug.LogError("Task cancelled");
@@ -381,10 +382,11 @@ public class FirebaseManager : MonoBehaviour
                     Debug.LogError("Error writing data " + task.Exception);
                     return;
                 }
-                    //TODO: revoked access updated
-            });
 
-        });
+                UIHandler.instance.UpdateRevokeAccessError("Revoked access successfully.", true);
+            }, taskScheduler);
+
+        }, taskScheduler);
     }
 
     List AddListToListManager(DataSnapshot list)

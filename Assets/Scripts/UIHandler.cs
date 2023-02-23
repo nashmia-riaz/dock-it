@@ -58,7 +58,7 @@ public class UIHandler : MonoBehaviour
     Button ShareListButton, RevokeAccessButton;
 
     [SerializeField]
-    TMP_Text ShareListErrorText;
+    TMP_Text ImportListErrorText, ShareListErrorText;
 
     [SerializeField]
     GameObject revokeAccessPanel;
@@ -71,6 +71,10 @@ public class UIHandler : MonoBehaviour
 
     [SerializeField]
     GameObject NoListGraphic;
+
+    [SerializeField]
+    Animator NotificationAnimator;
+    TMP_Text NotificationText;
 
     private void Awake()
     {
@@ -412,8 +416,33 @@ public class UIHandler : MonoBehaviour
         }
 
         DestroyListName(listKey);
+
+        List list = ListManager.instance.FindListUsingKey(listKey);
+        if (list == null) return;
+
+        if(list.Owner != FirebaseManager.instance.currentUser.userID)
+        {
+            NotificationAnimator.SetTrigger("SlideDown");
+            NotificationText.text = "User has removed the list " + list.Name;
+
+            StartCoroutine(Helper.waitBeforeExecution(5, () => {
+                NotificationAnimator.SetTrigger("SlideUp");
+            }));
+        }
     }
 
+    public void RevokeAccess()
+    {
+        FirebaseManager.instance.RevokeAccess(ListManager.instance.currentList.Id);
+        RevokeAccessButton.GetComponent<Animator>().SetTrigger("FadeOut");
+    }
+
+    public void UpdateRevokeAccessError(string message, bool status)
+    {
+        ShareListErrorText.gameObject.SetActive(true);
+        ShareListErrorText.color = status ? currentTheme.SuccessColor : currentTheme.FailureColor;
+        ShareListErrorText.text = message;
+    }
 
     public void RemoveItem(string itemKey)
     {
@@ -599,12 +628,12 @@ public class UIHandler : MonoBehaviour
 
     public void ShowShareListError(string message, bool isSuccessful)
     {
-        if (!ShareListErrorText.IsActive()) { 
-            ShareListErrorText.gameObject.SetActive(true);
-            ShareListErrorText.GetComponent<Animator>().SetTrigger("FadeIn"); 
+        if (!ImportListErrorText.IsActive()) { 
+            ImportListErrorText.gameObject.SetActive(true);
+            ImportListErrorText.GetComponent<Animator>().SetTrigger("FadeIn"); 
         }
-        ShareListErrorText.text = message;
-        ShareListErrorText.color = (isSuccessful) ? currentTheme.SuccessColor : currentTheme.FailureColor;
+        ImportListErrorText.text = message;
+        ImportListErrorText.color = (isSuccessful) ? currentTheme.SuccessColor : currentTheme.FailureColor;
 
     }
 
@@ -615,7 +644,7 @@ public class UIHandler : MonoBehaviour
 
     public void OnHideImportListPanel()
     {
-        ShareListErrorText.GetComponent<Animator>().SetTrigger("FadeOut");
+        ImportListErrorText.GetComponent<Animator>().SetTrigger("FadeOut");
         ImportListPanel.SetTrigger("Slide Out");
         StartCoroutine(Helper.waitBeforeExecution(0.5f, () => {
             ImportListPanel.gameObject.SetActive(false);
@@ -709,6 +738,7 @@ public class UIHandler : MonoBehaviour
             UpdateShareListLink(ref list);
 
             revokeAccessPanel.SetActive(true);
+            RevokeAccessButton.gameObject.SetActive(true);
             RevokeAccessButton.onClick.RemoveAllListeners();
             RevokeAccessButton.onClick.AddListener(()=> {
                 //TODO remove access
