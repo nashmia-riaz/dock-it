@@ -69,6 +69,9 @@ public class UIHandler : MonoBehaviour
     [SerializeField]
     bool isLightTheme;
 
+    [SerializeField]
+    GameObject NoListGraphic;
+
     private void Awake()
     {
         if (instance == null)
@@ -379,7 +382,7 @@ public class UIHandler : MonoBehaviour
         for (int i = 0; i < ListNameScrollView.transform.childCount; i++)
         {
             Transform listnameObj = ListNameScrollView.transform.GetChild(i);
-            if (listnameObj.name == ListManager.instance.currentList.Id)
+            if (ListManager.instance.AllLists.Count > 1)
             {
                 FoundNewList = true;
                 SwitchList(listnameObj.gameObject, ListManager.instance.currentList);
@@ -387,7 +390,10 @@ public class UIHandler : MonoBehaviour
         }
         if (!FoundNewList)
         {
-            //TODO; show graphic that no list is in system
+            NoListGraphic.SetActive(true);
+            AddItemButton.gameObject.SetActive(false);
+            ShareListButton.gameObject.SetActive(false);
+            ListNameInput.gameObject.SetActive(false);
         }
     }
         public void UpdateShareListLink(ref List list)
@@ -542,6 +548,10 @@ public class UIHandler : MonoBehaviour
 
         LoadCurrentList();
         OnHideMenu();
+        NoListGraphic.SetActive(false);
+        AddItemButton.gameObject.SetActive(true);
+        ShareListButton.gameObject.SetActive(true);
+        ListNameInput.gameObject.SetActive(true);
     }
 
     public void LoadCurrentList()

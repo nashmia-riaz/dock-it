@@ -173,6 +173,8 @@ public class FirebaseManager : MonoBehaviour
                 return;
             }
 
+            UIHandler.instance.LoadingPanelFadeIn("Signing User In");
+
             FirebaseUser newUser = task.Result;
             Debug.LogFormat("User signed in successfully: {0} ({1})",
                 newUser.DisplayName, newUser.UserId);
@@ -236,6 +238,7 @@ public class FirebaseManager : MonoBehaviour
                 //OnAutoSignIn();
                 FetchLists();
 
+                UIHandler.instance.LoadingPanelFadeOut();
         });
     }
 
@@ -485,7 +488,7 @@ public class FirebaseManager : MonoBehaviour
 
         var refListName = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(listKey);
         refListName.ChildChanged += HandleListUpdate;
-        //refListName.ChildRemoved += HandleListDelete;
+        refListName.ChildRemoved += HandleListDelete;
 
         var refUserList = FirebaseDatabase.DefaultInstance.GetReference("Users").Child(currentUser.userID).
             Child("Lists");
