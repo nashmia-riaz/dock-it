@@ -8,6 +8,8 @@ TagManager:
   - SecondaryUI
   - Text
   - Checkmark
+  - EventSystem
+  - Canvas
   layers:
   - Default
   - TransparentFX

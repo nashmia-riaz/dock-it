@@ -292,6 +292,8 @@ public class UIHandler : MonoBehaviour
             OnDeleteItem(listItem);
         });
 
+        ListScrollView.GetComponent<VerticalLayoutGroupCustom>().OnChildAdded(listItem.transform);
+
     }
 
     void OnDeleteItem(GameObject listItem)
@@ -414,7 +416,10 @@ public class UIHandler : MonoBehaviour
             Transform item = ListScrollView.GetChild(i);
             if (item.name == itemKey)
             {
-                DestroyImmediate(item.gameObject);
+                item.GetComponent<Animator>().SetTrigger("FadeOut");
+                StartCoroutine(Helper.waitBeforeExecution(0.5f, ()=> {
+                    DestroyImmediate(item.gameObject);
+                }));
                 break;
             }
         }
