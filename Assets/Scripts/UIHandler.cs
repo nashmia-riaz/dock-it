@@ -74,6 +74,7 @@ public class UIHandler : MonoBehaviour
 
     [SerializeField]
     Animator NotificationAnimator;
+    [SerializeField]
     TMP_Text NotificationText;
 
     private void Awake()
@@ -299,7 +300,6 @@ public class UIHandler : MonoBehaviour
             OnDeleteItem(listItem);
         });
 
-        ListScrollView.GetComponent<VerticalLayoutGroupCustom>().OnChildAdded(listItem.transform);
 
     }
 
