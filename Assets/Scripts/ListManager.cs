@@ -21,6 +21,12 @@ public class ListManager : MonoBehaviour
             Destroy(this.gameObject);
     }
 
+    public void ClearAll()
+    {
+        AllLists.Clear();
+        currentList = null;
+    }
+
     public void FindAndSetCurrentList(string ID)
     {
         foreach (List list in AllLists)
