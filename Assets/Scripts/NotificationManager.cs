@@ -7,7 +7,7 @@ public class NotificationManager : MonoBehaviour
 {
     public static NotificationManager instance;
 
-    Dictionary<string, UnityEvent> events;
+    Dictionary<string, UnityEvent<string>> events;
 
     private void Awake()
     {
@@ -20,12 +20,13 @@ public class NotificationManager : MonoBehaviour
         instance = this;
         DontDestroyOnLoad(gameObject);
 
+        events = new Dictionary<string, UnityEvent<string>>();
     }
 
-    public void SubscribeToEvent(UnityAction action, string eventName){
+    public void SubscribeToEvent(UnityAction<string> action, string eventName){
         if (!events.ContainsKey(eventName))
         {
-            UnityEvent newEvent = new UnityEvent();
+            UnityEvent<string> newEvent = new UnityEvent<string>();
             events.Add(eventName, newEvent);
             newEvent.AddListener(action);
         }
@@ -39,9 +40,20 @@ public class NotificationManager : MonoBehaviour
     {
         if (events.ContainsKey(eventName))
         {
-            events[eventName].Invoke();
+            events[eventName].Invoke("");
         }
     }
+
+
+    public void TriggerEvent(string eventName, string message)
+    {
+        if (events.ContainsKey(eventName))
+        {
+            events[eventName].Invoke(message);
+        }
+    }
+
+
 
     public void CleanupEvents()
     {
