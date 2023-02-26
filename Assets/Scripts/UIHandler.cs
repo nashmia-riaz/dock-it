@@ -300,7 +300,10 @@ public class UIHandler : MonoBehaviour
             OnDeleteItem(listItem);
         });
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> fe76ca7e7f4a007a93b9536cbdfd3243ffd2f406
     }
 
     void OnDeleteItem(GameObject listItem)
@@ -340,6 +343,19 @@ public class UIHandler : MonoBehaviour
         }
 
         SwitchList(listObj, list);
+    }
+
+    public void OnClickCopyShareLink()
+    {
+        CopyToClipboard(shareListLink.text);
+    }
+
+    void CopyToClipboard(string s)
+    {
+        TextEditor te = new TextEditor();
+        te.text = s;
+        te.SelectAll();
+        te.Copy();
     }
 
     public void LoadListNames()
@@ -689,7 +705,19 @@ public class UIHandler : MonoBehaviour
     public void OnClickLogout()
     {
         FirebaseManager.instance.OnLogout();
+        OnHideMenu();
+        SwitchToPanel(StartupPanel.transform);
+        for(int i = ListNameScrollView.transform.childCount - 1;  i >= 0; i--)
+        {
+            DestroyImmediate(ListNameScrollView.transform.GetChild(i).gameObject);
+        }
+
+        for (int i = ListScrollView.transform.childCount - 1; i >= 0; i--)
+        {
+            DestroyImmediate(ListScrollView.transform.GetChild(i).gameObject);
+        }
     }
+
 
     public void OnUpdateCurrentListName()
     {
