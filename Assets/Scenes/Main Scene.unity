@@ -9566,7 +9566,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 986006948}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1069494387}
+        m_TargetAssemblyTypeName: UIHandler, Assembly-CSharp
+        m_MethodName: OnClickCopyShareLink
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &986006948
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16940,7 +16952,7 @@ RectTransform:
   - {fileID: 183162797}
   - {fileID: 1968171723}
   m_Father: {fileID: 1975669191}
-  m_RootOrder: 8
+  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -18156,7 +18168,7 @@ RectTransform:
   - {fileID: 762254775}
   - {fileID: 1270718637}
   m_Father: {fileID: 1975669191}
-  m_RootOrder: 7
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -18459,9 +18471,9 @@ RectTransform:
   - {fileID: 1979234492}
   - {fileID: 521215875}
   - {fileID: 876307691}
-  - {fileID: 2111647871}
   - {fileID: 1962358496}
   - {fileID: 1798732055}
+  - {fileID: 2111647871}
   - {fileID: 1992592310}
   m_Father: {fileID: 0}
   m_RootOrder: 1
@@ -20322,7 +20334,7 @@ RectTransform:
   m_Children:
   - {fileID: 1037019490}
   m_Father: {fileID: 1975669191}
-  m_RootOrder: 6
+  m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}

@@ -336,6 +336,19 @@ public class UIHandler : MonoBehaviour
         SwitchList(listObj, list);
     }
 
+    public void OnClickCopyShareLink()
+    {
+        CopyToClipboard(shareListLink.text);
+    }
+
+    void CopyToClipboard(string s)
+    {
+        TextEditor te = new TextEditor();
+        te.text = s;
+        te.SelectAll();
+        te.Copy();
+    }
+
     public void LoadListNames()
     {
         while (ListNameScrollView.transform.childCount > 1)
