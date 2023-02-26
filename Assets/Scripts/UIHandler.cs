@@ -295,8 +295,6 @@ public class UIHandler : MonoBehaviour
             OnDeleteItem(listItem);
         });
 
-        ListScrollView.GetComponent<VerticalLayoutGroupCustom>().OnChildAdded(listItem.transform);
-
     }
 
     void OnDeleteItem(GameObject listItem)
@@ -660,7 +658,19 @@ public class UIHandler : MonoBehaviour
     public void OnClickLogout()
     {
         FirebaseManager.instance.OnLogout();
+        OnHideMenu();
+        SwitchToPanel(StartupPanel.transform);
+        for(int i = ListNameScrollView.transform.childCount - 1;  i >= 0; i--)
+        {
+            DestroyImmediate(ListNameScrollView.transform.GetChild(i).gameObject);
+        }
+
+        for (int i = ListScrollView.transform.childCount - 1; i >= 0; i--)
+        {
+            DestroyImmediate(ListScrollView.transform.GetChild(i).gameObject);
+        }
     }
+
 
     public void OnUpdateCurrentListName()
     {
