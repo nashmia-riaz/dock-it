@@ -398,6 +398,12 @@ public class FirebaseManager : MonoBehaviour
     public void ImportList(string listKey, string shareKey)
     {
         //TODO: check if list is already in the system before pursuing
+        if(ListManager.instance.FindListUsingKey(listKey) != null)
+        {
+            NotificationManager.instance.TriggerEvent("ShareListError", "List is already imported");
+            return;
+        }
+
         var taskScheduler = TaskScheduler.FromCurrentSynchronizationContext();
         reference.Child("Lists").Child(listKey).GetValueAsync().ContinueWith(task => {
             if (task.IsFaulted)
@@ -406,6 +412,11 @@ public class FirebaseManager : MonoBehaviour
             }
             else if (task.IsCompleted)
             {
+                if (shareKey != task.Result.Child("ShareKey").Value.ToString())
+                {
+                    NotificationManager.instance.TriggerEvent("ShareListError", "Invalid link!");
+                    return;
+                }
                 UserListInfo listInfo = new UserListInfo(shareKey, false);
                 reference.Child("Users").Child(currentUser.userID).Child("Lists").Child(listKey).SetRawJsonValueAsync(JsonUtility.ToJson(listInfo)).ContinueWith(listTask=> {
                     if (listTask.IsCanceled)
@@ -482,6 +493,22 @@ public class FirebaseManager : MonoBehaviour
         refUserList.ChildRemoved += HandleListRemovedFromUser;
     }
 
+    void DetachFirebaseFunction(string listKey)
+    {
+        var refItems = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(listKey).Child("Items").OrderByChild("checkmark");
+        refItems.ChildAdded -= HandleItemAdded;
+        refItems.ChildChanged -= HandleItemChanged;
+        refItems.ChildRemoved -= HandleItemDeleted;
+
+        var refListName = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(listKey);
+        refListName.ChildChanged -= HandleListUpdate;
+        refListName.ChildRemoved -= HandleListDelete;
+
+        var refUserList = FirebaseDatabase.DefaultInstance.GetReference("Users").Child(currentUser.userID).
+            Child("Lists");
+        refUserList.ChildRemoved -= HandleListRemovedFromUser;
+    }
+
     public void HandleItemDeleted(object sender, ChildChangedEventArgs args)
     {
         if (args.DatabaseError != null)
@@ -519,6 +546,7 @@ public class FirebaseManager : MonoBehaviour
         {
             string listKey = args.Snapshot.Reference.Parent.Key;
             NotificationManager.instance.TriggerEvent("ListDeletion", listKey);
+            DetachFirebaseFunction(listKey);
             //UIHandler.instance.OnListDeleted(listKey);
             //ListManager.instance.RemoveList(listKey);
             //ListManager.instance.UpdateCurrentList();
@@ -538,6 +566,7 @@ public class FirebaseManager : MonoBehaviour
         {
             string listKey = args.Snapshot.Key;
             NotificationManager.instance.TriggerEvent("ListDeletion", listKey);
+            DetachFirebaseFunction(listKey);
             //UIHandler.instance.OnListDeleted(listKey);
             //ListManager.instance.RemoveList(listKey);
             //ListManager.instance.UpdateCurrentList();
@@ -573,6 +602,7 @@ public class FirebaseManager : MonoBehaviour
                 return;
             }
             NotificationManager.instance.TriggerEvent("ListDeletion", listKey);
+            DetachFirebaseFunction(listKey);
             //UIHandler.instance.OnListDeleted(listKey);
             //ListManager.instance.RemoveList(listKey);
             //ListManager.instance.UpdateCurrentList();
