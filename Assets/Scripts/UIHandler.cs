@@ -300,10 +300,6 @@ public class UIHandler : MonoBehaviour
             OnDeleteItem(listItem);
         });
 
-<<<<<<< HEAD
-
-=======
->>>>>>> fe76ca7e7f4a007a93b9536cbdfd3243ffd2f406
     }
 
     void OnDeleteItem(GameObject listItem)
