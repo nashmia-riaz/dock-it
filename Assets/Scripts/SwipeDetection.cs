@@ -39,6 +39,7 @@ public class SwipeDetection : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
         Vector2 currentPosition = eventData.position;
         if (Mathf.Abs(Vector2.Distance(DragStartPosition, currentPosition)) > MaxDragDistance && !isSwiped)
         {
+            NotificationManager.instance.TriggerEvent("Swiped");
             swipeAnimator.SetTrigger("Swipe");
             isSwiped = true;
         }
@@ -48,6 +49,7 @@ public class SwipeDetection : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
     {
         if (!isSwiped)
         {
+            NotificationManager.instance.TriggerEvent("Swiped");
             swipeAnimator.SetTrigger("Swipe");
             isSwiped = true;
         }
