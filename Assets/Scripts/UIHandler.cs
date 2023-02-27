@@ -266,7 +266,14 @@ public partial class UIHandler : MonoBehaviour
 
     public void OnClickAddItem()
     {
+        NotificationManager.instance.TriggerEvent("Check");
         FirebaseManager.instance.CreateEmptyItem();
+    }
+
+    public void OnClickAddList()
+    {
+        NotificationManager.instance.TriggerEvent("Check");
+        FirebaseManager.instance.CreateEmptyList();
     }
 
     public void AddItem(Item item, string itemKey)
@@ -449,6 +456,8 @@ public partial class UIHandler : MonoBehaviour
         StartCoroutine(Helper.waitBeforeExecution(5, () => {
             NotificationAnimator.SetTrigger("SlideUp");
         }));
+
+        NotificationManager.instance.TriggerEvent("ShowNotification");
     }
 
     public void RevokeAccess()
@@ -642,11 +651,13 @@ public partial class UIHandler : MonoBehaviour
 
     public void OnShowImportListPanel()
     {
+        NotificationManager.instance.TriggerEvent("Swiped");
         ImportListPanel.gameObject.SetActive(true);
     }
 
     public void OnHideImportListPanel()
     {
+        NotificationManager.instance.TriggerEvent("Swiped");
         ImportListErrorText.GetComponent<Animator>().SetTrigger("FadeOut");
         ImportListPanel.SetTrigger("Slide Out");
         StartCoroutine(Helper.waitBeforeExecution(0.5f, () => {
@@ -657,11 +668,13 @@ public partial class UIHandler : MonoBehaviour
 
     public void OnShowShareListPanel()
     {
+        NotificationManager.instance.TriggerEvent("Swiped");
         ShareListPanel.gameObject.SetActive(true);
     }
 
     public void OnHideShareListPanel()
     {
+        NotificationManager.instance.TriggerEvent("Swiped");
         ShareListPanel.SetTrigger("Slide Out");
         StartCoroutine(Helper.waitBeforeExecution(0.5f, () => {
             ShareListPanel.gameObject.SetActive(false);
@@ -670,12 +683,14 @@ public partial class UIHandler : MonoBehaviour
 
     public void OnShowMenu()
     {
+        NotificationManager.instance.TriggerEvent("Swiped");
         Menu.gameObject.SetActive(true);
         BlurOverlay.gameObject.SetActive(true);
     }
 
     public void OnHideMenu()
     {
+        NotificationManager.instance.TriggerEvent("Swiped");
         Menu.SetTrigger("Slide Out");
         BlurOverlay.SetTrigger("FadeOut");
 
@@ -829,11 +844,13 @@ public partial class UIHandler : MonoBehaviour
             checkmarkImage.sprite = trueCheckmark;
         }
 
+        NotificationManager.instance.TriggerEvent("ItemCheck");
         FirebaseManager.instance.UpdateItemCheckmark(checkmarkImage.transform.parent.parent.name, state);
     }
 
     public void OnClickSwitchTheme()
     {
+        NotificationManager.instance.TriggerEvent("Check");
         isLightTheme = !isLightTheme;
         SetTheme();
         UpdateTheme();
