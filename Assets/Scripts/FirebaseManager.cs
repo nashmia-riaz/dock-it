@@ -71,15 +71,13 @@ public class FirebaseManager : MonoBehaviour
                         {
                             Debug.Log("[SIGN IN] Current user is null");
 
-                            UIHandler.instance.SwitchToPanel(UIHandler.instance.StartupPanel.transform);
-                            UIHandler.instance.LoadingPanelFadeOut();
+                            NotificationManager.instance.TriggerEvent("ShowLoginScreen");
                         }
                     });
                 }
                 else
                 {
-                    UIHandler.instance.SwitchToPanel(UIHandler.instance.StartupPanel.transform);
-                    UIHandler.instance.LoadingPanelFadeOut();
+                    NotificationManager.instance.TriggerEvent("ShowLoginScreen");
                 }
 
             }
@@ -132,14 +130,13 @@ public class FirebaseManager : MonoBehaviour
         {
             if (task.IsCanceled)
             {
-                UIHandler.instance.OnRegisterError("Could not connect");
-                UIHandler.instance.LoadingPanelFadeOut();
+                NotificationManager.instance.TriggerEvent("RegistrationError", "Could not connect");
+
                 return;
             }
             if (task.IsFaulted)
             {
-                UIHandler.instance.OnRegisterError(task.Exception.InnerException.GetBaseException().Message);
-                UIHandler.instance.LoadingPanelFadeOut();
+                NotificationManager.instance.TriggerEvent("RegistrationError", task.Exception.InnerException.GetBaseException().Message);
                 return;
             }
 
@@ -162,14 +159,12 @@ public class FirebaseManager : MonoBehaviour
         auth.SignInWithEmailAndPasswordAsync(email, password).ContinueWith(task => {
             if (task.IsCanceled)
             {
-                UIHandler.instance.OnSignInError("Could not connect");
-                UIHandler.instance.LoadingPanelFadeOut();
+                NotificationManager.instance.TriggerEvent("LoginError", "Could not connect");
                 return;
             }
             if (task.IsFaulted)
             {
-                UIHandler.instance.OnSignInError(task.Exception.InnerException.GetBaseException().Message);
-                UIHandler.instance.LoadingPanelFadeOut();
+                NotificationManager.instance.TriggerEvent("LoginError", task.Exception.InnerException.GetBaseException().Message);
                 return;
             }
 
@@ -242,16 +237,16 @@ public class FirebaseManager : MonoBehaviour
         {
             if (task.IsCanceled)
             {
-                UIHandler.instance.OnResetPasswordError("Reset password cancelled.");
+                NotificationManager.instance.TriggerEvent("PasswordResetFail", "Reset password cancelled.");
                 return;
             }
             if (task.IsFaulted)
             {
-                UIHandler.instance.OnResetPasswordError(task.Exception.Message);
+                NotificationManager.instance.TriggerEvent("PasswordResetFail", task.Exception.Message);
                 return;
             }
 
-            UIHandler.instance.OnResetPasswordSuccess("Password reset email sent successfully");
+            NotificationManager.instance.TriggerEvent("PasswordResetSuccess");
             Debug.Log("Email reset succesfully");
         });
     }
@@ -261,17 +256,17 @@ public class FirebaseManager : MonoBehaviour
         reference.Child("Users").Child(userID).Child("Lists").Child(listKey).RemoveValueAsync().ContinueWithOnMainThread(task=> {
             if (task.IsCanceled)
             {
-                Debug.LogError("Task cancelled");
+                NotificationManager.instance.TriggerEvent("ListDeletionFailure", "Error: Could not delete list");
                 return;
             }
             if (task.IsFaulted)
             {
-                Debug.LogError("Error writing data " + task.Exception);
+                NotificationManager.instance.TriggerEvent("ListDeletionFailure", task.Exception.Message);
                 return;
             }
 
             if (updateUI)
-                UIHandler.instance.UpdateListDeletionError("List removed successfully!", true);
+                NotificationManager.instance.TriggerEvent("ListDeletionSuccess", "List removed successfully!");
         });
     }
 
@@ -294,7 +289,6 @@ public class FirebaseManager : MonoBehaviour
                     ListManager.instance.UpdateCurrentList();
 
                     Debug.Log("[LISTS] Fetched lists");
-                    //UIHandler.instance.LoadCurrentList();
                     OnAutoSignIn();
                     return;
                 }
@@ -333,8 +327,7 @@ public class FirebaseManager : MonoBehaviour
                                     CreateEmptyList();
                                 else
                                 {
-                                    UIHandler.instance.LoadListNames();
-                                    UIHandler.instance.SetShareAndRevoke(null);
+                                    NotificationManager.instance.TriggerEvent("LoadListsOnStart");
                                 }
 
                                 Debug.Log("[LISTS] Fetched lists");
@@ -367,16 +360,16 @@ public class FirebaseManager : MonoBehaviour
             reference.Child("Users").Child(currentUser.userID).Child("Lists").Child(listKey).Child("shareKey").SetValueAsync(newKey).ContinueWith(userSK=>{
                 if (userSK.IsCanceled)
                 {
-                    Debug.LogError("Task cancelled");
+                    NotificationManager.instance.TriggerEvent("RevokeAccessError", "Error: Could not revoke access");
                     return;
                 }
                 if (userSK.IsFaulted)
                 {
-                    Debug.LogError("Error writing data " + task.Exception);
+                    NotificationManager.instance.TriggerEvent("RevokeAccessError", task.Exception.Message);
                     return;
                 }
 
-                UIHandler.instance.UpdateRevokeAccessError("Revoked access successfully.", true);
+                NotificationManager.instance.TriggerEvent("RevokeAccessSuccess", "Revoked Access Successfully");
             }, taskScheduler);
 
         }, taskScheduler);
@@ -405,6 +398,12 @@ public class FirebaseManager : MonoBehaviour
     public void ImportList(string listKey, string shareKey)
     {
         //TODO: check if list is already in the system before pursuing
+        if(ListManager.instance.FindListUsingKey(listKey) != null)
+        {
+            NotificationManager.instance.TriggerEvent("ShareListError", "List is already imported");
+            return;
+        }
+
         var taskScheduler = TaskScheduler.FromCurrentSynchronizationContext();
         reference.Child("Lists").Child(listKey).GetValueAsync().ContinueWith(task => {
             if (task.IsFaulted)
@@ -413,18 +412,22 @@ public class FirebaseManager : MonoBehaviour
             }
             else if (task.IsCompleted)
             {
+                if (shareKey != task.Result.Child("ShareKey").Value.ToString())
+                {
+                    NotificationManager.instance.TriggerEvent("ShareListError", "Invalid link!");
+                    return;
+                }
                 UserListInfo listInfo = new UserListInfo(shareKey, false);
                 reference.Child("Users").Child(currentUser.userID).Child("Lists").Child(listKey).SetRawJsonValueAsync(JsonUtility.ToJson(listInfo)).ContinueWith(listTask=> {
                     if (listTask.IsCanceled)
                     {
                         Debug.LogError("Task cancelled");
-                        UIHandler.instance.ShowShareListError("Could not retrieve list!", false);
+                        NotificationManager.instance.TriggerEvent("ShareListError", "Could not retrieve list!");
                         return;
                     }
                     if (listTask.IsFaulted)
                     {
-                        Debug.LogError("Error writing data " + task.Exception);
-                        UIHandler.instance.ShowShareListError(task.Exception.InnerException.GetBaseException().Message, false);
+                        NotificationManager.instance.TriggerEvent("ShareListError", task.Exception.InnerException.GetBaseException().Message);
                         return;
                     }
 
@@ -490,6 +493,22 @@ public class FirebaseManager : MonoBehaviour
         refUserList.ChildRemoved += HandleListRemovedFromUser;
     }
 
+    void DetachFirebaseFunction(string listKey)
+    {
+        var refItems = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(listKey).Child("Items").OrderByChild("checkmark");
+        refItems.ChildAdded -= HandleItemAdded;
+        refItems.ChildChanged -= HandleItemChanged;
+        refItems.ChildRemoved -= HandleItemDeleted;
+
+        var refListName = FirebaseDatabase.DefaultInstance.GetReference("Lists").Child(listKey);
+        refListName.ChildChanged -= HandleListUpdate;
+        refListName.ChildRemoved -= HandleListDelete;
+
+        var refUserList = FirebaseDatabase.DefaultInstance.GetReference("Users").Child(currentUser.userID).
+            Child("Lists");
+        refUserList.ChildRemoved -= HandleListRemovedFromUser;
+    }
+
     public void HandleItemDeleted(object sender, ChildChangedEventArgs args)
     {
         if (args.DatabaseError != null)
@@ -511,7 +530,8 @@ public class FirebaseManager : MonoBehaviour
 
             if (ListManager.instance.currentList == null) return;
             if (listKey == ListManager.instance.currentList.Id)
-                UIHandler.instance.RemoveItem(id);
+                //UIHandler.instance.RemoveItem(id);
+                NotificationManager.instance.TriggerEvent("ItemDeletion", id);
         }
     }
 
@@ -525,10 +545,12 @@ public class FirebaseManager : MonoBehaviour
         if (args.Snapshot.Key.ToString() == "Name")
         {
             string listKey = args.Snapshot.Reference.Parent.Key;
-            UIHandler.instance.OnListDeleted(listKey);
-            ListManager.instance.RemoveList(listKey);
-            ListManager.instance.UpdateCurrentList();
-            UIHandler.instance.LoadCurrentList();
+            NotificationManager.instance.TriggerEvent("ListDeletion", listKey);
+            DetachFirebaseFunction(listKey);
+            //UIHandler.instance.OnListDeleted(listKey);
+            //ListManager.instance.RemoveList(listKey);
+            //ListManager.instance.UpdateCurrentList();
+            //UIHandler.instance.LoadCurrentList();
         }
     }
 
@@ -543,10 +565,12 @@ public class FirebaseManager : MonoBehaviour
         if (args.Snapshot.Reference.Parent.Key.ToString() == "Lists")
         {
             string listKey = args.Snapshot.Key;
-            UIHandler.instance.OnListDeleted(listKey);
-            ListManager.instance.RemoveList(listKey);
-            ListManager.instance.UpdateCurrentList();
-            UIHandler.instance.LoadCurrentList();
+            NotificationManager.instance.TriggerEvent("ListDeletion", listKey);
+            DetachFirebaseFunction(listKey);
+            //UIHandler.instance.OnListDeleted(listKey);
+            //ListManager.instance.RemoveList(listKey);
+            //ListManager.instance.UpdateCurrentList();
+            //UIHandler.instance.LoadCurrentList();
         }
     }
 
@@ -577,10 +601,12 @@ public class FirebaseManager : MonoBehaviour
                 //TODO update UI to show access revoked
                 return;
             }
-            UIHandler.instance.OnListDeleted(listKey);
-            ListManager.instance.RemoveList(listKey);
-            ListManager.instance.UpdateCurrentList();
-            UIHandler.instance.LoadCurrentList();
+            NotificationManager.instance.TriggerEvent("ListDeletion", listKey);
+            DetachFirebaseFunction(listKey);
+            //UIHandler.instance.OnListDeleted(listKey);
+            //ListManager.instance.RemoveList(listKey);
+            //ListManager.instance.UpdateCurrentList();
+            //UIHandler.instance.LoadCurrentList();
         }
     }
 
@@ -609,7 +635,6 @@ public class FirebaseManager : MonoBehaviour
                 Debug.LogFormat("[LIST] List Name Update Complete {0} {1} {2}" ,task.IsCompleted, newName, listKey);
                 UIHandler.instance.UpdateListNameInScrollview(list);
             });
-
     }
 
     public void UpdateItemTask(string itemKey, string task)
@@ -670,7 +695,6 @@ public class FirebaseManager : MonoBehaviour
         string checkmark = args.Snapshot.Child("checkmark").Value.ToString();
         string id = args.Snapshot.Child("id").Value.ToString();
         Item newItem = new Item(task, checkmark == "True", id);
-        Debug.Log("New item created " + newItem.id);
         ListManager.instance.AddItemToList(newItem, listKey, id);
     }
 
@@ -691,18 +715,13 @@ public class FirebaseManager : MonoBehaviour
         ListManager.instance.UpdateItemInList(listKey, item);
     }
 
-
-    public void ChangeOrderOfItem(string listKey, string itemKey)
-    {
-        //reference.Child("Lists").Child(listKey).OrderByChild()
-    }
-
     void OnAutoSignIn()
     {
-        Debug.Log("[UI] Switching to main panel");
-        UIHandler.instance.UpdateUserName(currentUser.email);
-        UIHandler.instance.SwitchToPanel(UIHandler.instance.mainPanel);
-        UIHandler.instance.LoadingPanelFadeOut();
+        //Debug.Log("[UI] Switching to main panel");
+        //UIHandler.instance.UpdateUserName(currentUser.email);
+        //UIHandler.instance.SwitchToPanel(UIHandler.instance.mainPanel);
+        //UIHandler.instance.LoadingPanelFadeOut();
+        NotificationManager.instance.TriggerEvent("SignIn");
     }
 
     public void SignOut()
@@ -745,8 +764,21 @@ public class FirebaseManager : MonoBehaviour
             });
 
         UserListInfo listInfo = new UserListInfo(list.ShareKey, true);
-        reference.Child("Users").Child(currentUser.userID).Child("Lists").Child(listKey).SetRawJsonValueAsync(JsonUtility.ToJson(listInfo)).ContinueWithOnMainThread(task=> { 
-        
+        reference.Child("Users").Child(currentUser.userID).Child("Lists").Child(listKey).SetRawJsonValueAsync(JsonUtility.ToJson(listInfo)).ContinueWithOnMainThread(task=> {
+
+            if (task.IsCanceled)
+            {
+                Debug.LogError("Task cancelled");
+                return;
+            }
+            if (task.IsFaulted)
+            {
+                Debug.LogError("Error writing data " + task.Exception);
+                return;
+            }
+
+            Debug.Log("[USER] Added list to user" + task.IsCompleted);
+
         });
 
         reference.Child("Lists").Child(listKey).Child("ShareKey").SetValueAsync(list.ShareKey)
@@ -820,7 +852,6 @@ public class FirebaseManager : MonoBehaviour
                 }
                 Debug.Log("[ITEM] Write Empty Item Successful " + task.IsCompleted);
 
-                //ListManager.instance.currentList.AddItem(item);
             });
     }
     public void OnLogout()
@@ -837,7 +868,6 @@ public class FirebaseManager : MonoBehaviour
         List list = ListManager.instance.FindListUsingKey(listKey);
         if(list != null)
         {
-            //todo
         }
 
         DeleteListFromUser(currentUser.userID, listKey, false);
@@ -855,8 +885,8 @@ public class FirebaseManager : MonoBehaviour
                 return;
             }
 
-            if(updateUI)
-                UIHandler.instance.UpdateListDeletionError("List <b>deleted</b> successfully!", true);        
+            if (updateUI)
+                NotificationManager.instance.TriggerEvent("ListDeletionSuccess", "List <b>deleted</b> successfully!");
         });
     }
 }

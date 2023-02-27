@@ -6,7 +6,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class UIHandler : MonoBehaviour
+public partial class UIHandler : MonoBehaviour
 {
     public static UIHandler instance;
 
@@ -95,7 +95,10 @@ public class UIHandler : MonoBehaviour
         isLightTheme = PlayerPrefs.GetString("Theme") == "Light";
         SetTheme();
         UpdateTheme();
+
+        SetupEvents();
     }
+
 
     public void LoadingPanelFadeOut()
     {
@@ -434,13 +437,18 @@ public class UIHandler : MonoBehaviour
 
         if(list.Owner != FirebaseManager.instance.currentUser.userID)
         {
-            NotificationAnimator.SetTrigger("SlideDown");
-            NotificationText.text = "User has removed the list " + list.Name;
-
-            StartCoroutine(Helper.waitBeforeExecution(5, () => {
-                NotificationAnimator.SetTrigger("SlideUp");
-            }));
+            ShowNotification("User has removed the list " + list.Name);
         }
+    }
+
+    void ShowNotification(string message)
+    {
+        NotificationAnimator.SetTrigger("SlideDown");
+        NotificationText.text = message;
+
+        StartCoroutine(Helper.waitBeforeExecution(5, () => {
+            NotificationAnimator.SetTrigger("SlideUp");
+        }));
     }
 
     public void RevokeAccess()
@@ -456,21 +464,6 @@ public class UIHandler : MonoBehaviour
         ShareListErrorText.text = message;
     }
 
-    public void RemoveItem(string itemKey)
-    {
-        for(int i = 0; i < ListScrollView.childCount; i++)
-        {
-            Transform item = ListScrollView.GetChild(i);
-            if (item.name == itemKey)
-            {
-                item.GetComponent<Animator>().SetTrigger("FadeOut");
-                StartCoroutine(Helper.waitBeforeExecution(0.5f, ()=> {
-                    DestroyImmediate(item.gameObject);
-                }));
-                break;
-            }
-        }
-    }
     public void DestroyListName(string listKey)
     {
         Transform listName = ListNameScrollView.transform.Find(listKey);
@@ -528,13 +521,21 @@ public class UIHandler : MonoBehaviour
         });
     }
 
-    public void UpdateListDeletionError(string message, bool isSuccessful)
+    public void UpdateListDeletionError(string message)
     { 
         deleteErrorText.text = message;
         deleteErrorText.GetComponent<Animator>().SetTrigger("FadeIn");
-        deleteErrorText.color = (isSuccessful) ? currentTheme.SuccessColor : currentTheme.FailureColor;
+        deleteErrorText.color = currentTheme.FailureColor;
         deleteErrorText.gameObject.SetActive(true);
-       }
+    }
+
+    public void UpdateListDeletionSuccess(string message)
+    {
+        deleteErrorText.text = message;
+        deleteErrorText.GetComponent<Animator>().SetTrigger("FadeIn");
+        deleteErrorText.color = currentTheme.SuccessColor;
+        deleteErrorText.gameObject.SetActive(true);
+    }
 
     public void OnClickCloseDeleteConfirmation()
     {
@@ -631,23 +632,13 @@ public class UIHandler : MonoBehaviour
         string[] shareInput = importListIF.text.Split("&");
         if (shareInput.Length <= 1)
         {
-            ShowShareListError("Incorrect link!", false);
+            ShowShareListError("Incorrect link!");
             return;
         }
 
         FirebaseManager.instance.ImportList(shareInput[0], shareInput[1]);
     }
 
-    public void ShowShareListError(string message, bool isSuccessful)
-    {
-        if (!ImportListErrorText.IsActive()) { 
-            ImportListErrorText.gameObject.SetActive(true);
-            ImportListErrorText.GetComponent<Animator>().SetTrigger("FadeIn"); 
-        }
-        ImportListErrorText.text = message;
-        ImportListErrorText.color = (isSuccessful) ? currentTheme.SuccessColor : currentTheme.FailureColor;
-
-    }
 
     public void OnShowImportListPanel()
     {
@@ -662,6 +653,7 @@ public class UIHandler : MonoBehaviour
             ImportListPanel.gameObject.SetActive(false);
         }));
     }
+
 
     public void OnShowShareListPanel()
     {
@@ -739,14 +731,6 @@ public class UIHandler : MonoBehaviour
                 });
             }
         }
-    }
-    public void UpdateRevokeAccessText(string text, bool isSuccessful)
-    {
-        RevokeAccessError.text = text;
-        if (isSuccessful)
-            RevokeAccessError.color = currentTheme.SuccessColor;
-        else
-            RevokeAccessError.color = currentTheme.FailureColor;
     }
     public void SetShareAndRevoke(List list)
     {
