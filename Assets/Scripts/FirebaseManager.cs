@@ -91,10 +91,8 @@ public class FirebaseManager : MonoBehaviour
         });
     }
 
-    User GetUserBasedOnToken(string token, Helper.basicFunction toExecuteOnSuccess)
+    void GetUserBasedOnToken(string token, Helper.basicFunction toExecuteOnSuccess)
     {
-        User user = null;
-
         reference.Child("Users").GetValueAsync().ContinueWithOnMainThread(task => {
             if (task.IsFaulted)
             {
@@ -112,14 +110,13 @@ public class FirebaseManager : MonoBehaviour
                     if (newUser.userToken == token)
                     {
                         this.currentUser = newUser;
+                        break;
                     }
                 }
 
                 toExecuteOnSuccess();
             }
         });
-
-        return user;
     }
 
     public void RegisterUser(string email, string password)
