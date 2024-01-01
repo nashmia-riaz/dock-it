@@ -243,7 +243,7 @@ public class FirebaseManager : MonoBehaviour
                 return;
             }
 
-            NotificationManager.instance.TriggerEvent("PasswordResetSuccess");
+            NotificationManager.instance.TriggerEvent("PasswordResetSuccess", "Reset password email was sent successfully.");
             Debug.Log("Email reset succesfully");
         });
     }
@@ -718,7 +718,7 @@ public class FirebaseManager : MonoBehaviour
         //UIHandler.instance.UpdateUserName(currentUser.email);
         //UIHandler.instance.SwitchToPanel(UIHandler.instance.mainPanel);
         //UIHandler.instance.LoadingPanelFadeOut();
-        NotificationManager.instance.TriggerEvent("SignIn");
+        NotificationManager.instance.TriggerEvent("SignIn", currentUser.email);
     }
 
     public void SignOut()
