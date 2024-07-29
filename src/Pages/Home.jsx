@@ -4,12 +4,9 @@ import Planet from '../assets/Planet.png'
 import Star from '../assets/Star.png'
 import Marty from '../assets/Marty-Astronaut.png'
 import Rocket from '../assets/Rocket.png'
+import { Link } from "react-router-dom"
 
-function Home({updateState}){
-    const GetStarted = ()=>{
-        updateState('Onboarding');
-    }
-
+function Home(){
     return (
     <div id='HomeGradient'>
         <div className='HomeBackground'>
@@ -32,7 +29,7 @@ function Home({updateState}){
                         A minimal to-do list app that helps you focus on what needs to be done.
                     </div>
                 </div>
-                <button id='GetStartedButton' onClick={GetStarted}>GET STARTED</button>
+                <Link to="onboarding" id='GetStartedButton'>GET STARTED</Link>
             </div>
         </div>
     </div>

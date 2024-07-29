@@ -68,6 +68,7 @@ button.OnboardingSubmitButton{
 
 button.OnboardingSubmitButton:hover{    
   box-shadow: 0px 0px 2em var(--pink-shadow);
+  transform:scale(1.05, 1.05);
 }
 
 .onboarding{
@@ -79,8 +80,10 @@ button.OnboardingSubmitButton:hover{
   padding: 1em;
   color: var(--secondary-text-color);
   transition: 0.5s;
-}
+  background: none;
 
+  border: none; outline: none;
+}
 .onboard-button:hover{
   color:var(--primary-text-color);
   text-shadow: 0 0 12px var(--secondary-text-color);
@@ -89,4 +92,10 @@ button.OnboardingSubmitButton:hover{
 .onboard-button.active{
   color: var(--primary-text-color);
   text-decoration: underline;
+}
+
+.onboard-button.inactive:hover, .onboard-button.active:hover,
+.onboard-button.inactive:focus, .onboard-button.active:focus{
+  outline: none!important;
+  border: none!important;
 }

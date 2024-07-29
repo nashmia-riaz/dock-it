@@ -14,8 +14,8 @@ function Onboarding(){
 
   return (  
     <div className='OnboardingContainer'>
-      <a href="#" onClick={()=>changeState('REGISTER')} className={`onboard-button ${pageState == 'REGISTER' ? 'active' : 'inactive'}`} ><h2>REGISTER</h2></a>
-      <a href="#" onClick={()=>changeState('LOGIN')} className={`onboard-button ${pageState == 'LOGIN' ? 'active' : 'inactive'}`}><h2>LOGIN</h2></a> 
+      <button onClick={()=>changeState('REGISTER')} className={`onboard-button ${pageState == 'REGISTER' ? 'active' : 'inactive'}`} ><h2>REGISTER</h2></button>
+      <button onClick={()=>changeState('LOGIN')} className={`onboard-button ${pageState == 'LOGIN' ? 'active' : 'inactive'}`}><h2>LOGIN</h2></button> 
       {currentPage}   
     </div>
   )
