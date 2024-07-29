@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -23,7 +24,8 @@ public class NotificationManager : MonoBehaviour
         events = new Dictionary<string, UnityEvent<string>>();
     }
 
-    public void SubscribeToEvent(UnityAction<string> action, string eventName){
+    public void SubscribeToEvent(UnityAction<string> action, string eventName)
+    {
         if (!events.ContainsKey(eventName))
         {
             UnityEvent<string> newEvent = new UnityEvent<string>();
