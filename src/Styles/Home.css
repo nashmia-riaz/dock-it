@@ -1,0 +1,29 @@
+
+body{
+    width: 100vw;
+    background: url('../assets/Stars-Background.png') repeat;
+    background-size: contain;
+
+    background: var(--gradient);
+}
+
+#root{
+    padding: 0;
+    margin: 0;
+}
+
+.HomeBackground{
+    width: 100vw;
+    height: 100vh;
+
+    background: url('../assets/Stars-Background.png');
+    background-size: contain;
+    background-repeat: repeat;
+}
+
+.HomeContainer{
+    display: flex;
+    align-items: center; 
+    justify-content: center; 
+    height: 100vh;
+}

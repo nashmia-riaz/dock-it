@@ -1,0 +1,57 @@
+#root {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 2rem;
+    text-align: center;
+}  
+
+label{
+    color: var(--secondary-color);
+    font-family: var(--secondary-text-color);
+    font-weight: bold;
+    display: block;
+    text-align: left;
+    margin-top: 2em;
+    margin-bottom: 0.5em;
+    font-size: 0.75em;
+    letter-spacing: 0.15em;
+}
+
+form{
+    width: 100%;
+}
+
+input{
+    padding: 0.5em 0;
+    border-width: 0;
+    border-radius: 0.2em;
+    background-color: var(--background-color-secondary);
+    font-size: 1em;
+    transition: 0.5s;
+    font-family: var(--secondary-text-color);
+    width: 100%;
+}
+
+input:focus{
+    box-shadow: 0 0 2em rgba(0, 0, 0, 1);
+    outline: none!important;
+}
+
+button{
+    border: none;
+    margin-top: 2em;
+    width: 100%;
+    background: var(--gradient);
+    transition: 0.5s;
+}
+
+button:hover{    
+    box-shadow: 0px 0px 2em var(--pink-shadow);
+}
+
+body{
+    width: 100vw;
+    background: url('../assets/Stars-Background.png') repeat;
+    background-size: contain;
+    background-color: var(--background-color-primary)!important;
+}
