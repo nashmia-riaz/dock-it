@@ -1,26 +1,22 @@
 import '../App.css'
 import  {useState} from 'react'
-import Login from './Login';
-import Register from './Register';
 import Home from './Home';
+import Onboarding from './Onboarding';
 
 function MainPage(){
-  const [pageState, changeState] = useState('HOME'); 
+  var [pageState, changeState] = useState('HOME'); 
   
-  var currentPage = <Register/>;
-  if(pageState == 'REGISTER')
-    currentPage = <Register/>;
-  else if (pageState == 'LOGIN')
-    currentPage = <Login/>;
+  const updateState = (newState)=>{
+    changeState(newState);
+  } 
+
+  var currentPage = <Onboarding/>;
+  if(pageState == 'ONBOARDING')
+    currentPage = <Onboarding updateState = {updateState}/>;
   else if(pageState == 'HOME')
-    currentPage = <Home/>;
+    currentPage = <Home updateState = {updateState}/>;
 
   return (
-  // <div className='onboarding'>
-  //   <a href="#" onClick={()=>changeState('REGISTER')} className={`onboard-button ${pageState == 'REGISTER' ? 'active' : 'inactive'}`} ><h2>REGISTER</h2></a>
-  //   <a href="#" onClick={()=>changeState('LOGIN')} className={`onboard-button ${pageState == 'LOGIN' ? 'active' : 'inactive'}`}><h2>LOGIN</h2></a> 
-  //   {currentPage}   
-  // </div>
   <div>{currentPage}</div>
   )
 }

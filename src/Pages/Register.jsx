@@ -53,7 +53,7 @@ function Register(){
     
 
     return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className='OnboardingForm'>
         <div>
             <label>EMAIL</label>
             <input type="email" name='email' value={loginData.email} onChange={handleChange}/>
@@ -66,7 +66,7 @@ function Register(){
             <label>PASSWORD</label>
             <input type="password" name='password2' value={loginData.password2} onChange={handleChange} />
         </div>
-        <div><button type="submit">REGISTER</button></div>
+        <div><button type="submit" className='OnboardingSubmitButton'>REGISTER</button></div>
     </form>
     )
 }

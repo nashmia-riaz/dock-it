@@ -4,7 +4,6 @@ body{
     background: url('../assets/Stars-Background.png') repeat;
     background-size: contain;
 
-    background: var(--gradient);
 }
 
 #root{
@@ -13,17 +12,191 @@ body{
 }
 
 .HomeBackground{
-    width: 100vw;
-    height: 100vh;
 
     background: url('../assets/Stars-Background.png');
     background-size: contain;
     background-repeat: repeat;
 }
 
+#HomeGradient{
+    background: var(--gradient);
+    width: 100vw;
+    height: 100vh;
+}
+
 .HomeContainer{
+    flex-direction:column;
     display: flex;
     align-items: center; 
     justify-content: center; 
     height: 100vh;
+    width: 50%;
+    margin: 0 auto;
+}
+
+#GetStartedButton{
+    background-color: var(--background-color-primary)!important;
+    width: 50%;
+    transition: 0.5s;
+    border: none;
+    padding: 0.75em;
+    display: block;
+}
+
+#GetStartedButton:hover{
+    transform:scale(1.05, 1.05);
+    box-shadow: 0 0 1em var(--background-color-primary);
+    border: none;
+}
+
+#HomeTitle{
+    width: 100%;
+    display:block;
+}
+
+#HomeTitle>img, #HomeTitle>h3{
+    display: block;
+}
+
+#HomeTitle>img{
+    width: 50%;
+    margin: 0 auto;
+}
+
+#HomeTitle>h3{
+    font-weight: 400;
+    margin: 0.25em;
+}
+
+#HomeInformation{
+    height: 46%;
+    width: inherit;
+    margin: 2em;
+}
+
+#HomeImages{
+    height: 85%;
+}
+
+#HomeMarty{
+    height: 80%;
+    max-width: 100%;
+
+    animation: HomeMartyAnimation 20s ease-in-out infinite;
+}
+
+#HomeSubtitle{
+    width: 100%;
+    text-wrap:wrap;
+}
+#HomeImages{
+    display:flex;
+    flex-grow: 1;
+    justify-content: center;
+    align-items: center;
+}
+#HomeImages>img:not(#HomeMarty){
+    position: absolute;
+}
+#HomeRocket{
+    width: 8vw;
+    left: 10vw;
+    top: 10vh;
+    transform: rotate(-25deg);
+
+    animation: RocketAnimation 20s ease-in-out infinite;
+}
+#HomePlanet{
+    width: 15vw;
+    right: 10vw;
+    bottom: 10vh;
+    transform: rotate(10deg);
+
+    animation: PlanetAnimation 20s ease-in-out infinite;
+}
+#HomeStar1{
+    width: 3vw;
+    left: 14vw;
+    bottom: 10vh;
+
+    animation: StarAnimation1 30s linear infinite;
+}
+
+#HomeStar2{
+    width: 5vw;
+    right: 20vw;
+    top: 30vh;
+    animation: StarAnimation1 30s linear infinite;
+}
+
+#HomeStar3{
+    width: 6vw;
+    left: 26vw;
+    bottom: 44vh;
+    animation: StarAnimation1 30s linear infinite;
+}
+
+#HomeStar4{
+    width: 2vw;
+    right: 32vw;
+    bottom: 34vh;
+    animation: StarAnimation1 30s linear infinite;
+}
+
+#HomeButton{
+    width: 100%;
+    display: block;
+    border: 2px solid blue;
+}
+
+@keyframes HomeMartyAnimation{
+    0%{
+        transform: rotate(20deg);
+        translate: 0 -7%;
+    }
+    50%{
+        transform: rotate(0deg);
+        translate: 0 -5%;
+    }
+    100%{
+        transform: rotate(20deg);
+        translate: 0 -7%;
+    }
+}
+
+@keyframes PlanetAnimation{
+    0%{
+        transform: rotate(-10deg);
+        translate: 0 -20%;
+    }
+    50%{
+        transform: rotate(10deg);
+        translate: 0 0%;
+    }
+    100%{
+        transform: rotate(-10deg);
+        translate: 0 -20%;
+    }
+}
+
+@keyframes StarAnimation1{
+    0%{
+        transform: rotate(0deg);
+    }
+    100%{
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes RocketAnimation{
+    0%{
+        transform: rotate(0deg);
+    }
+    50%{
+        transform: rotate(-30deg);
+        translate: -10% -20%;
+    }
+    100%{
+        transform: rotate(0deg);
+    }
 }

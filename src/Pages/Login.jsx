@@ -67,7 +67,7 @@ function Login(){
             <label>PASSWORD</label>
             <input type="password" name='password2' value={loginData.password2} onChange={handleChange} />
         </div>
-        <div><button type="submit">LOGIN</button></div>
+        <div><button type="submit" className='OnboardingSubmitButton'>LOGIN</button></div>
     </form>
     )
 }

@@ -10,6 +10,8 @@ body{
   --gradient-pink: #ef04a8;
   --gradient-purple:#810090;
   --gradient: linear-gradient(45deg, var(--gradient-purple), var(--gradient-pink));
+
+  font-family: var(--secondary-font);
 }
 
 #root {
@@ -56,6 +58,18 @@ body{
   color: #888;
 }
 
+button.OnboardingSubmitButton{
+  border: none;
+  margin-top: 2em;
+  width: 100%;
+  background: var(--gradient);
+  transition: 0.5s;
+}
+
+button.OnboardingSubmitButton:hover{    
+  box-shadow: 0px 0px 2em var(--pink-shadow);
+}
+
 .onboarding{
   width: 100%;
 }
@@ -76,4 +90,3 @@ body{
   color: var(--primary-text-color);
   text-decoration: underline;
 }
-
