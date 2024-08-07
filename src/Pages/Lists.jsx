@@ -1,10 +1,15 @@
-import { useLocation } from "react-router-dom";
+import FirebaseInit from "./FirebaseInit"
+import { useState } from "react";
 
 function Lists(){
-    const location = useLocation();
-    const{ userEmail } = location.state || {};
+    const [currentUser, setCurrentUser] = useState(null);
+    FirebaseInit.auth.onAuthStateChanged(function(user){
+        if(user){
+            setCurrentUser(user);
+        }
+    });
 
-    console.log(userEmail);
+    console.log(currentUser);
 
     return (
     <div id='HomeGradient'>
