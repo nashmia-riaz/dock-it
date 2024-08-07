@@ -2,6 +2,7 @@ import '../Styles/Login.css'
 import {  initializeApp } from 'firebase/app'
 import {  getAuth, signInWithEmailAndPassword } from 'firebase/auth'
 import  {useState} from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const firebaseConfig = {
   apiKey: "AIzaSyDVGWGzZzzK6CuIO_c53kKI5khsjc9E0IM",
@@ -16,19 +17,23 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const loginUserWithFirebase = (email, password)=>{
+const loginUserWithFirebase = (email, password, navigate, setError)=>{
     signInWithEmailAndPassword(auth, email, password). 
     then((userCredential) =>{
         const user = userCredential.user;
-        console.log('Login successful');
+        console.log('Login successful '+user.email);
+        navigate('/lists', {state: user.email});
     }).catch((error)=>{
-        const errorCode = error.code;
         const errorMessage = error.message;
-        console.log('Login failed '+errorMessage);
+        console.log('Login failed ' + errorMessage);
+        setError({visible: true, message: errorMessage});
     });
 };
 
 function Login(){
+    const navigate = useNavigate();
+    const [error, setError] = useState({visible: false, message:'Error'});
+
     const [loginData, setLoginData] = useState({
         email: '',
         password: '',
@@ -49,7 +54,7 @@ function Login(){
     };
 
     const submitForm = (data)=>{
-        loginUserWithFirebase(data.email, data.password);
+        loginUserWithFirebase(data.email, data.password, navigate, setError);
     }
     
 
@@ -64,8 +69,11 @@ function Login(){
             <input type="password" name='password' value={loginData.password} onChange={handleChange} />
         </div>
         <div>
-            <label>PASSWORD</label>
+            <label>RETYPE PASSWORD</label>
             <input type="password" name='password2' value={loginData.password2} onChange={handleChange} />
+        </div>
+        <div>
+            <p className='error' style={{ visibility: error.visible ? 'visible' : 'hidden'}}>{error.message}</p>
         </div>
         <div><button type="submit" className='OnboardingSubmitButton'>LOGIN</button></div>
     </form>

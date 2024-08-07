@@ -1,7 +1,9 @@
 import '../App.css'
+import '../Styles/Login.css'
 import  {useState} from 'react'
 import Login from './Login';
 import Register from './Register';
+
 
 function Onboarding(){
   const [pageState, changeState] = useState('REGISTER'); 

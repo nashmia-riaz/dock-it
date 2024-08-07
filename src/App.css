@@ -10,12 +10,13 @@ body{
   --gradient-pink: #ef04a8;
   --gradient-purple:#810090;
   --gradient: linear-gradient(45deg, var(--gradient-purple), var(--gradient-pink));
+  --error-color: #de1f48;
 
   font-family: var(--secondary-font);
 }
 
 #root {
-  max-width: 1280px;
+  /* max-width: 1280px; */
   margin: 0 auto;
   padding: 2rem;
   text-align: center;

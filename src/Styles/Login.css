@@ -1,10 +1,11 @@
 #root{
     width: 100%;
+    margin: auto;  
 }
 
 .OnboardingContainer{
   width: 40%;
-  margin: 0 auto;
+  margin: auto;  
 }
 
 label{
@@ -45,4 +46,8 @@ body{
     background: url('../assets/Stars-Background.png') repeat;
     background-size: contain;
     background-color: var(--background-color-primary)!important;
+}
+
+.error{
+    color: var(--error-color);
 }
