@@ -1,6 +1,6 @@
 
 import {  initializeApp } from 'firebase/app'
-import {  getAuth, browserLocalPersistence } from 'firebase/auth'
+import {  getAuth, browserLocalPersistence, signOut } from 'firebase/auth'
 
 const firebaseConfig = {
     apiKey: "AIzaSyDVGWGzZzzK6CuIO_c53kKI5khsjc9E0IM",
@@ -13,8 +13,26 @@ const firebaseConfig = {
     appId: "1:736775214430:web:98b131a44ce34f2cee6bcf"
   };
   
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  auth.setPersistence(browserLocalPersistence);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+auth.setPersistence(browserLocalPersistence);
+
   
-  export default {app, auth};
+function SignOut(navigate){
+  signOut(auth).
+  then(()=>{
+    navigate('/');
+  }).
+  catch((error)=>{
+    console.log(error);
+  });
+}
+
+function RedirectLogin(currentUser, navigate){
+    if (currentUser) 
+      navigate('/lists');
+    else
+      navigate('/');
+}
+
+export default {app, auth, SignOut, RedirectLogin};
