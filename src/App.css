@@ -59,8 +59,15 @@ body{
   color: #888;
 }
 
-button.OnboardingSubmitButton{
+button, button:hover, button:focus{
   border: none;
+  transition: 0.5s;
+}
+button:hover{
+  transform:scale(1.05, 1.05);
+}
+
+button.OnboardingSubmitButton{
   margin-top: 2em;
   width: 100%;
   background: var(--gradient);

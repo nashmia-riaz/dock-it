@@ -1,0 +1,56 @@
+.logoutButton{
+    background-color: var(--error-color);
+    border-radius: 0; 
+
+    width: 100%;
+}
+.logoutButtonContainer{
+    width:-moz-calc(100% + 4em);
+    width:calc(100% + 4em);
+    margin-left: -2em;
+}
+
+.logoutButton:hover{
+    box-shadow: 0 0 0.5em var(--error-color);
+    transform: scale(1, 1);
+}
+
+.lists-sidebar{
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    width: 16vw;
+    
+    padding: 2em;
+
+    display: flex;
+    flex-shrink: 1; flex-grow: 1;
+    flex:auto;
+    flex-direction: column;
+    justify-content: left;
+    align-items: flex-start;
+
+    background-color: var(--background-color-secondary);
+
+    box-shadow: 0 0 2em var(--background-color-secondary);
+}
+.lists-sidebar>div{
+    text-align: left;
+}
+.logoutButton{
+    width: 100%;
+}
+.app-details{
+    display: flex;
+    flex: auto;
+    flex-direction: column;
+    align-items: flex-start;
+    flex-shrink: 1; flex-grow: 0;
+}
+.app-details>.logo>img{
+    width: 40%;
+}
+.app-details>.logo{
+    padding: 0;
+}
