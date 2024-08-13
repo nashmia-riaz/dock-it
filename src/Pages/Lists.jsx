@@ -4,13 +4,14 @@ import { getDatabase, ref, onValue } from 'firebase/database'
 import { useNavigate } from "react-router-dom";
 import '../Styles/Lists.css'
 import Logo from '../assets/Logo.png'
+import List from './List'
 
 const database = getDatabase();
 
 function Lists(){
     const [lists, setLists] = useState([]);    
     const [currentUser, setUser] = useState(null);
-    const [currentItems, setCurrentItems] = useState([]);
+    const [currentList, setCurrentList] = useState("");
     const navigate = useNavigate();
     const handleLogout = ()=>{
         FirebaseInit.SignOut(navigate);
@@ -41,13 +42,7 @@ function Lists(){
 
                     Promise.all(listsPromises).then((results=>{
                         setLists(results);
-                        fetchList(database, results[0].id).then((items)=>{
-                            const fetchedItems = [];
-                            Object.keys(items).forEach(element => {
-                                fetchedItems.push(items[element]);
-                            });
-                            setCurrentItems(fetchedItems);
-                        });
+                        setCurrentList(results[0].id);
                     }));
                 });
             };
@@ -71,37 +66,10 @@ function Lists(){
                     </div>
                 ))}
             </div>
-            <div className="mainListView">
-                {currentItems.map(item => (
-                        <div key={item.id}>
-                        {item.task}
-                        </div>
-                ))}
-            </div>
+            <List data={{database: database, listID: currentList}}/>
         </div>
     )
 }
 
-const fetchList = (database, ID)=>{
-    return new Promise((resolveContainer)=>{
-         const listsRefID = ref(database, 'Lists/'+ID+'/Items');           
-
-        //first we fetch the ID of the lists this user has access to
-        onValue(listsRefID, (snapshot)=>{
-            const itemPromises = Object.keys(snapshot.val()).map((itemKey)=>{
-                return new Promise((resolve)=>{
-                    const itemRef = ref(database, 'Lists/'+ID+'/Items/'+itemKey);
-                    onValue(itemRef, (snapshot2)=>{
-                        resolve (snapshot2.val());
-                    })
-                });
-            });
-
-            Promise.all(itemPromises).then((results)=>{
-                resolveContainer(results);            
-            });
-        });
-    });
-};
 
 export default Lists

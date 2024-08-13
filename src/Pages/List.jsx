@@ -1,28 +1,52 @@
 import '../App.css'
+import {useState} from "react";
+import {ref, onValue } from 'firebase/database'
 
-function ListItem(props){
-  return <li>{props.animal}</li>
-}
+const fetchList = (database, ID)=>{
+  return new Promise((resolveContainer)=>{
+       const listsRefID = ref(database, 'Lists/'+ID+'/Items');           
+
+      //first we fetch the ID of the lists this user has access to
+      onValue(listsRefID, (snapshot)=>{
+          const itemPromises = Object.keys(snapshot.val()).map((itemKey)=>{
+              return new Promise((resolve)=>{
+                  const itemRef = ref(database, 'Lists/'+ID+'/Items/'+itemKey);
+                  onValue(itemRef, (snapshot2)=>{
+                      resolve (snapshot2.val());
+                  })
+              });
+          });
+
+          Promise.all(itemPromises).then((results)=>{
+              resolveContainer(results);            
+          });
+      });
+  });
+};
 
 function List(props){
-  return(
-    <ul>
-      {props.animals.map((animal)=>{
-        return animal.startsWith("L") ? <ListItem key={animal} animal={animal}></ListItem> : null;
-      })}
-    </ul>
-  )
-}
+  const [currentItems, setCurrentItems] = useState([]);
 
-function ListApp(){
-  const animals = ["Lion", "Cow", "Snake", "Lizard"];
+  if(!props) return;
+  if(props.listID =='') return;
+
+  console.log(props);
   
-  return (
-    <div>
-        <h1>Animals:</h1>
-        <List animals={animals}/>
-    </div>
-    )
+  fetchList(props.data.database, props.data.listID).then((items)=>{
+      const fetchedItems = [];
+      Object.keys(items).forEach(element => {
+          fetchedItems.push(items[element]);
+      });
+      setCurrentItems(fetchedItems);
+  });
+return (
+<div className="mainListView">
+  {currentItems.map(item => (
+          <div key={item.id}>
+          {item.task}
+          </div>
+  ))}
+</div>);
 }
 
-export default ListApp
+export default List
