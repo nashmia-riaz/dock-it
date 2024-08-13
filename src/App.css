@@ -13,6 +13,7 @@ body{
   --gradient-purple:#810090;
   --gradient: linear-gradient(45deg, var(--gradient-purple), var(--gradient-pink));
   --error-color: #de1f48;
+  --success-color:#229c4d;
 
   font-family: var(--secondary-font);
 }

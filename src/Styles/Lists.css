@@ -84,3 +84,14 @@
     background-color: var(--background-color-highlight);
     border: none;
 }
+
+.checked{
+    color: var(--success-color);
+}
+.itemName{
+    display: inline;
+}
+
+.itemNameCrossed{
+    text-decoration: line-through;
+}

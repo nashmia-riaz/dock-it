@@ -1,6 +1,9 @@
 import '../App.css'
 import {useState, useEffect} from "react";
 import {ref, onValue } from 'firebase/database'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCircle } from '@fortawesome/free-regular-svg-icons';
+import {faCircleCheck } from '@fortawesome/free-solid-svg-icons';
 
 const fetchList = (database, ID)=>{
   return new Promise((resolveContainer)=>{
@@ -49,7 +52,8 @@ return (
 <div className="mainListView">
   {currentItems.map(item => (
           <div key={item.id}>
-          {item.task}
+            {(!item.checkmark) ? <FontAwesomeIcon className='unchecked' icon={faCircle}/> : <FontAwesomeIcon className='checked' icon={faCircleCheck}/>}
+          <p className={((item.checkmark) ? 'itemNameCrossed' : '') +' itemName'}>{item.task}</p> 
           </div>
   ))}
 </div>);
