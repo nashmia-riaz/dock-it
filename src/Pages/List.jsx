@@ -1,5 +1,5 @@
 import '../App.css'
-import {useState} from "react";
+import {useState, useEffect} from "react";
 import {ref, onValue } from 'firebase/database'
 
 const fetchList = (database, ID)=>{
@@ -26,19 +26,25 @@ const fetchList = (database, ID)=>{
 
 function List(props){
   const [currentItems, setCurrentItems] = useState([]);
-
-  if(!props) return;
-  if(props.listID =='') return;
-
-  console.log(props);
+  var currentID = '';
   
-  fetchList(props.data.database, props.data.listID).then((items)=>{
-      const fetchedItems = [];
-      Object.keys(items).forEach(element => {
-          fetchedItems.push(items[element]);
+  if(props)
+    currentID = props.data.listID;
+
+  useEffect(()=>{
+    if(currentID != ''){
+      fetchList(props.data.database, currentID).then((items)=>{
+          const fetchedItems = [];
+          Object.keys(items).forEach(element => {
+              fetchedItems.push(items[element]);
+          });
+          setCurrentItems(fetchedItems);
       });
-      setCurrentItems(fetchedItems);
-  });
+    }
+  }, [currentID]);
+
+  
+
 return (
 <div className="mainListView">
   {currentItems.map(item => (

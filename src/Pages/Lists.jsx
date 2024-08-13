@@ -42,6 +42,8 @@ function Lists(){
 
                     Promise.all(listsPromises).then((results=>{
                         setLists(results);
+
+                        if(results.length > 0)
                         setCurrentList(results[0].id);
                     }));
                 });
