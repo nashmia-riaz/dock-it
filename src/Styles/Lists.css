@@ -1,13 +1,18 @@
 .logoutButton{
     background-color: var(--error-color);
     border-radius: 0; 
-
+    box-sizing: border-box;
+    padding:1em;
+    margin-top: 0.5em;
     width: 100%;
+    transition: 0.5s;    
 }
 .logoutButtonContainer{
-    width:-moz-calc(100% + 4em);
-    width:calc(100% + 4em);
-    margin-left: -2em;
+    /* width:-moz-calc(100% + 4em);
+    width: calc(100% + 4em); */
+    width: calc(100% + 4em);
+    margin-left:    -2em;
+    box-sizing: border-box;
 }
 
 .logoutButton:hover{
@@ -53,4 +58,29 @@
 }
 .app-details>.logo{
     padding: 0;
+}
+
+.listsButtonsSidebar{
+    margin-top: 2em;
+    width: calc(100% + 4em);
+    margin-left:    -2em;
+}
+.listButton{
+    box-sizing: border-box;
+    padding:1em;
+    margin-top: 0.5em;
+    border: 0.14em solid var(--background-color-tertiary);
+    width: 100%;
+    transition: 0.5s;    
+}
+
+.listButton:hover{
+    cursor: pointer;
+    box-shadow: 0 0 1em var(--background-color-tertiary);background-color: var(--background-color-tertiary);
+    transform: scale(1, 1.05);
+}
+
+.listActive{
+    background-color: var(--background-color-highlight);
+    border: none;
 }

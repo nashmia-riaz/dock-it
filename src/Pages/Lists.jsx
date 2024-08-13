@@ -53,6 +53,10 @@ function Lists(){
         }
     }, [currentUser]);
 
+    const updateCurrentList = (newListID)=>{
+        setCurrentList(newListID);
+    }
+
     return (
         <div>
             <div className="lists-sidebar">
@@ -62,11 +66,13 @@ function Lists(){
                     <div className="userDetail" key='user'>{ currentUser ? (currentUser.email) : ''}</div>
                     <div className="logoutButtonContainer"><button className='logoutButton' onClick={handleLogout}>Logout</button></div>
                 </div>
-                    {lists.map(item => (
-                    <div key={item.id}>
-                    {item.obj.Name}
-                    </div>
-                ))}
+                <div className='listsButtonsSidebar'>
+                    {lists.map((item) => (
+                        <div key={item.id} className={((currentList == item.id) ? 'listActive ': '' )+'listButton'} onClick={()=>updateCurrentList(item.id)}>
+                        {item.obj.Name}
+                        </div>
+                    ))}
+                </div>
             </div>
             <List data={{database: database, listID: currentList}}/>
         </div>

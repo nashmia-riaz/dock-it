@@ -4,6 +4,8 @@ body{
 
   --background-color-primary: #15181d;
   --background-color-secondary: #22252d;
+  --background-color-tertiary: #323642;
+  --background-color-highlight: #424757;
   --secondary-font: "Montserrat", sans-serif;
 
   --pink-shadow: rgba(239, 4, 168, 0.5);
@@ -16,7 +18,6 @@ body{
 }
 
 #root {
-  /* max-width: 1280px; */
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
