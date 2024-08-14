@@ -77,7 +77,7 @@ function Lists(){
                     ))}
                 </div>
             </div>
-            <List data={{database: database, listID: currentList.id, listName:currentList.name}}/>
+            {(currentList.id) ? <List data={{database: database, listID: currentList.id, listName:currentList.name}}/> : ''}
         </div>
     )
 }

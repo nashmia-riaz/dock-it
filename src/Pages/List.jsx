@@ -29,46 +29,42 @@ const fetchList = (database, ID)=>{
 
 function List(props){
   const [currentItems, setCurrentItems] = useState([]);
-  var currentListName = '';
-  var currentID = '';
+  const [currentListName, setCurrentListName] = useState("");
+  const [currentID, setCurrentID] = useState("");
   
-  if(props){
-    if(props.data.listID && props.data.listName){
-      currentID = props.data.listID;
-      currentListName = props.data.listName;
-    }
-  }
 
   useEffect(()=>{
-    if(currentID != ''){
-      fetchList(props.data.database, currentID).then((items)=>{
+    if(props){
+      fetchList(props.data.database, props.data.listID).then((items)=>{
           const fetchedItems = [];
           Object.keys(items).forEach(element => {
               fetchedItems.push(items[element]);
           });
           setCurrentItems(fetchedItems);
       });
+      
+      setCurrentID(props.data.listID);
+      setCurrentListName(props.data.listName);    
     }
-  }, [currentID]);
+  }, [props]);
 
-  const OnChangeItemTask = (prevItem, newTask)=>{
-    var updatedItems = currentItems;
-    updatedItems.map(item => {  
-      if(item.id === prevItem.id) {
-         item.task = newTask;
-        }
+  const OnChangeItemTask = (targetItem, newTask)=>{
+     // Create a new array with the updated object
+     const updatedItems = currentItems.map(item =>{            
+      if(item.id === targetItem.id) {
+        item.task = newTask;
+        return item;
       }
-    );
+      else return item;
+    });
     
     // Set the new state
     setCurrentItems(updatedItems);
   }  
 
-  const OnChangeListName = ()=>{}
-
 return (
 <div className="mainListView">
-  <div className="listName"><input value={currentListName} onChange={()=>OnChangeListName()}></input></div>
+  <div className="listName"><input value={currentListName} onChange={(event)=>setCurrentListName(event.target.value)}></input></div>
   <div className='listItems'>
   {currentItems.map(item => (
       <div key={item.id}>
