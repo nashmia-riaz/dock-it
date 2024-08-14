@@ -29,10 +29,15 @@ const fetchList = (database, ID)=>{
 
 function List(props){
   const [currentItems, setCurrentItems] = useState([]);
+  var currentListName = '';
   var currentID = '';
   
-  if(props)
-    currentID = props.data.listID;
+  if(props){
+    if(props.data.listID && props.data.listName){
+      currentID = props.data.listID;
+      currentListName = props.data.listName;
+    }
+  }
 
   useEffect(()=>{
     if(currentID != ''){
@@ -46,16 +51,32 @@ function List(props){
     }
   }, [currentID]);
 
-  
+  const OnChangeItemTask = (prevItem, newTask)=>{
+    var updatedItems = currentItems;
+    updatedItems.map(item => {  
+      if(item.id === prevItem.id) {
+         item.task = newTask;
+        }
+      }
+    );
+    
+    // Set the new state
+    setCurrentItems(updatedItems);
+  }  
+
+  const OnChangeListName = ()=>{}
 
 return (
 <div className="mainListView">
+  <div className="listName"><input value={currentListName} onChange={()=>OnChangeListName()}></input></div>
+  <div className='listItems'>
   {currentItems.map(item => (
-          <div key={item.id}>
-            {(!item.checkmark) ? <FontAwesomeIcon className='unchecked' icon={faCircle}/> : <FontAwesomeIcon className='checked' icon={faCircleCheck}/>}
-          <p className={((item.checkmark) ? 'itemNameCrossed' : '') +' itemName'}>{item.task}</p> 
-          </div>
+      <div key={item.id}>
+        <FontAwesomeIcon className={((!item.checkmark) ? 'unchecked' : 'checked') + ' itemCheckIcon'} icon={(!item.checkmark) ? faCircle : faCircleCheck}/> 
+        <input className={((item.checkmark) ? 'itemNameCrossed' : '') +' itemName'} value={item.task} onChange={(event)=>OnChangeItemTask(item, event.target.value)}/> 
+      </div>
   ))}
+  </div>
 </div>);
 }
 

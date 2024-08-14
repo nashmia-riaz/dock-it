@@ -1,5 +1,11 @@
 .logoutButton{
     background-color: var(--error-color);
+}
+
+.createListButton{
+    background-color: var(--success-color);
+}
+.sidebarButton>button{
     border-radius: 0; 
     box-sizing: border-box;
     padding:1em;
@@ -7,7 +13,8 @@
     width: 100%;
     transition: 0.5s;    
 }
-.logoutButtonContainer{
+
+.sidebarButton{
     /* width:-moz-calc(100% + 4em);
     width: calc(100% + 4em); */
     width: calc(100% + 4em);
@@ -19,15 +26,20 @@
     box-shadow: 0 0 0.5em var(--error-color);
     transform: scale(1, 1);
 }
+.createListButton:hover{
+    box-shadow: 0 0 0.5em var(--success-color);
+    transform: scale(1, 1);
+}
 
 .lists-sidebar{
     position: fixed;
     left: 0;
     top: 0;
     height: 100vh;
-    width: 16vw;
+    width: 20vw;
     
-    padding: 2em;
+    padding: 4em;
+    box-sizing: border-box;
 
     display: flex;
     flex-shrink: 1; flex-grow: 1;
@@ -60,17 +72,24 @@
     padding: 0;
 }
 
-.listsButtonsSidebar{
+.listsButtonsSidebar, .app-details
+{
     margin-top: 2em;
     width: calc(100% + 4em);
     margin-left:    -2em;
+}
+.app-details>div{  
+    /* width: calc(100% + 4em);
+    margin-left: -2em; */
+    box-sizing: border-box;
 }
 .listButton{
     box-sizing: border-box;
     padding:1em;
     margin-top: 0.5em;
     border: 0.14em solid var(--background-color-tertiary);
-    width: 100%;
+    width: calc(100% + 4em);
+    margin-left: -2em;
     transition: 0.5s;    
 }
 
@@ -94,4 +113,53 @@
 
 .itemNameCrossed{
     text-decoration: line-through;
+}
+.mainListView{
+    width: calc(100vw - 20vw);
+    left: 20vw;
+    height: 80vh;
+    top:20vh;
+    position: fixed;
+    box-sizing: border-box;
+    text-align: left;
+    padding: 0 10em;
+}
+.listItems{
+    font-size: 1.2em;
+    padding-top: 2em;
+}
+.listItems>div{
+    margin: 0.75em;
+}
+.listItems>div>FontAwesomeIcon{
+    margin-right: 1em;
+}
+.listItems>div>input{
+    background: none;
+    display: inline;
+    width: auto;
+}
+.listItems>div>input:hover, .listItems>div>input:focus{
+    box-shadow: none;
+}
+.itemCheckIcon{
+    margin-right: 1em;
+}
+.listName{
+    width: auto;
+    font-size: 2em;
+    position: fixed;
+    top: 3em;
+    left: calc(50%);
+}
+.listName>input{
+
+    background: none;
+    text-decoration: underline;
+    font-style:italic;
+    text-align: center;
+}
+
+.listName>input{
+    box-shadow: none;
 }

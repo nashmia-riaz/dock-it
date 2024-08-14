@@ -11,7 +11,8 @@ const database = getDatabase();
 function Lists(){
     const [lists, setLists] = useState([]);    
     const [currentUser, setUser] = useState(null);
-    const [currentList, setCurrentList] = useState("");
+    const [currentList, setCurrentList] = useState([]);
+
     const navigate = useNavigate();
     const handleLogout = ()=>{
         FirebaseInit.SignOut(navigate);
@@ -42,9 +43,8 @@ function Lists(){
 
                     Promise.all(listsPromises).then((results=>{
                         setLists(results);
-
                         if(results.length > 0)
-                        setCurrentList(results[0].id);
+                            updateCurrentList(results[0].id, results[0].obj.Name);
                     }));
                 });
             };
@@ -53,8 +53,8 @@ function Lists(){
         }
     }, [currentUser]);
 
-    const updateCurrentList = (newListID)=>{
-        setCurrentList(newListID);
+    const updateCurrentList = (newListID, newListName)=>{
+        setCurrentList({id: newListID, name: newListName});
     }
 
     return (
@@ -64,17 +64,20 @@ function Lists(){
                     <div className="logo"><img src={Logo} alt="" /></div>
                     <div className="buymeacoffee"></div>
                     <div className="userDetail" key='user'>{ currentUser ? (currentUser.email) : ''}</div>
-                    <div className="logoutButtonContainer"><button className='logoutButton' onClick={handleLogout}>Logout</button></div>
+                    <div className="sidebarButton"><button className='logoutButton' onClick={handleLogout}>Logout</button></div>
                 </div>
                 <div className='listsButtonsSidebar'>
+                    <div className="sidebarButton">
+                        <button className="createListButton">Create List</button>
+                    </div>
                     {lists.map((item) => (
-                        <div key={item.id} className={((currentList == item.id) ? 'listActive ': '' )+'listButton'} onClick={()=>updateCurrentList(item.id)}>
+                        <div key={item.id} className={((currentList.id == item.id) ? 'listActive ': '' )+'listButton'} onClick={()=>updateCurrentList(item.id)}>
                         {item.obj.Name}
                         </div>
                     ))}
                 </div>
             </div>
-            <List data={{database: database, listID: currentList}}/>
+            <List data={{database: database, listID: currentList.id, listName:currentList.name}}/>
         </div>
     )
 }
