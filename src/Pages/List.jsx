@@ -63,12 +63,12 @@ function List(props){
     
     // Set the new state
     setCurrentItems(updatedItems);
-    addChangeFunction(OnPushItemTask, targetItem, newTask);
+    addChangeFunction(OnPushItemTask, targetItem);
     setSaveState({saveIcon: faX, saveMessage:'Unsaved changes', state:false});
   }  
 
-  const OnPushItemTask = (targetItem, newTask)=>{
-    targetItem.task = newTask;
+  const OnPushItemTask = (targetItem)=>{
+    // targetItem.task = newTask;
     if(props.data.database){
       set(ref(props.data.database, 'Lists/'+currentID+'/Items/'+targetItem.id), targetItem)
       .then(()=>{
@@ -110,6 +110,22 @@ function List(props){
     changesFunction.current = [];    
   }
 
+  const OnToggleCheck= (targetItem)=>{
+    targetItem.checkmark = !targetItem.checkmark;
+
+    // Create a new array with the updated object
+    const updatedItems = currentItems.map(item =>{            
+      if(item.id === targetItem.id) {
+        item.checkmark = targetItem.checkmark;
+        return item;
+      }
+      else return item;
+    });
+
+    setCurrentItems(updatedItems);
+    OnPushItemTask(targetItem);
+  }
+
 return (
 <div className="mainListView">
   {saveState.saveIcon && <div className={(saveState.state ? 'fadeOut' : 'fadeIn') +' saveProgressContainer'}>
@@ -121,8 +137,8 @@ return (
   <div className='listItems'>
   {currentItems.map(item => (
       <div key={item.id}>
-        <FontAwesomeIcon className={((!item.checkmark) ? 'unchecked' : 'checked') + ' itemCheckIcon'} icon={(!item.checkmark) ? faCircle : faCircleCheck}/> 
-        <input className={((item.checkmark) ? 'itemNameCrossed' : '') +' itemName'} value={item.task} onKeyDown={SaveChanges} onBlur={(event)=>OnPushItemTask(item, event.target.value)} onChange={(event)=>OnChangeItemTask(item, event.target.value)}/> 
+        <FontAwesomeIcon onClick={()=>OnToggleCheck(item)} className={((!item.checkmark) ? 'unchecked' : 'checked') + ' itemCheckIcon'} icon={(!item.checkmark) ? faCircle : faCircleCheck}/> 
+        <input className={((item.checkmark) ? 'itemNameCrossed' : '') +' itemName'} value={item.task} onKeyDown={SaveChanges} onBlur={(event)=>OnPushItemTask(item)} onChange={(event)=>OnChangeItemTask(item, event.target.value)}/> 
       </div>
   ))}
   </div>
