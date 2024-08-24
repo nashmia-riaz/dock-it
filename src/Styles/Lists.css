@@ -143,7 +143,13 @@
     box-shadow: none;
 }
 .itemCheckIcon{
+    text-align: center;
     margin-right: 1em;
+    transition: 0.5s;
+}
+.itemCheckIcon:hover{
+    cursor:pointer;
+    font-size: 1.2em;
 }
 .listName{
     width: auto;

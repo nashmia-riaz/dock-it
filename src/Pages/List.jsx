@@ -1,6 +1,6 @@
 import '../App.css'
 import {useState, useEffect} from "react";
-import {ref, onValue } from 'firebase/database'
+import {ref, onValue, set } from 'firebase/database'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCircle } from '@fortawesome/free-regular-svg-icons';
 import {faCircleCheck } from '@fortawesome/free-solid-svg-icons';
@@ -49,8 +49,10 @@ function List(props){
   }, [props]);
 
   const OnChangeItemTask = (targetItem, newTask)=>{
-     // Create a new array with the updated object
-     const updatedItems = currentItems.map(item =>{            
+    targetItem.task = newTask;
+
+    // Create a new array with the updated object
+    const updatedItems = currentItems.map(item =>{            
       if(item.id === targetItem.id) {
         item.task = newTask;
         return item;
@@ -62,14 +64,37 @@ function List(props){
     setCurrentItems(updatedItems);
   }  
 
+  const OnPushItemTask = (targetItem, newTask)=>{
+    targetItem.task = newTask;
+    if(props.data.database){
+      set(ref(props.data.database, 'Lists/'+currentID+'/Items/'+targetItem.id), targetItem)
+      .then(()=>{
+      })
+      .catch((error)=>{
+        console.log(error);
+      })
+    }    
+  }
+
+  const OnChangeListName = (listID, newName)=>{
+    if(props.data.database){
+      set(ref(props.data.database, 'Lists/'+currentID+'/Name'), newName)
+        .then(()=>{
+        })
+        .catch((error)=>{
+          console.log(error);
+        })
+    }
+  }
+
 return (
 <div className="mainListView">
-  <div className="listName"><input value={currentListName} onChange={(event)=>setCurrentListName(event.target.value)}></input></div>
+  <div className="listName"><input value={currentListName} onChange={(event)=>setCurrentListName(event.target.value)} onBlur={(event)=>OnChangeListName(currentID, event.target.value)}></input></div>
   <div className='listItems'>
   {currentItems.map(item => (
       <div key={item.id}>
         <FontAwesomeIcon className={((!item.checkmark) ? 'unchecked' : 'checked') + ' itemCheckIcon'} icon={(!item.checkmark) ? faCircle : faCircleCheck}/> 
-        <input className={((item.checkmark) ? 'itemNameCrossed' : '') +' itemName'} value={item.task} onChange={(event)=>OnChangeItemTask(item, event.target.value)}/> 
+        <input className={((item.checkmark) ? 'itemNameCrossed' : '') +' itemName'} value={item.task} onBlur = {(event)=>OnPushItemTask(item, event.target.value)} onChange={(event)=>OnChangeItemTask(item, event.target.value)}/> 
       </div>
   ))}
   </div>
