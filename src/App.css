@@ -109,3 +109,13 @@ button.OnboardingSubmitButton:hover{
   outline: none!important;
   border: none!important;
 }
+.fadeOut {
+  opacity: 0!important;
+  transition: opacity 0.5s ease-out;
+  transition-delay: 3s;
+}
+
+.fadeIn {
+  opacity: 1!important;
+  transition: opacity 0.5s ease-in;
+}

@@ -169,3 +169,23 @@
 .listName>input{
     box-shadow: none;
 }
+.saveProgress{
+    position: fixed;
+    right: 2em;
+    top: 2em;
+    padding: 1em;
+    border-radius: 0.25em;
+    transition: 0.5s;
+}
+.saveProgressContainer{
+    opacity: 0;
+}
+.saveProgress>.saveIcon{
+    margin-right: 1em;
+}
+.saveProgress.unsaved{
+    background-color: var(--error-color);
+}
+.saveProgress.saved{
+    background-color: var(--success-color);
+}

@@ -1,9 +1,9 @@
 import '../App.css'
-import {useState, useEffect} from "react";
+import {useState, useEffect, useRef} from "react";
 import {ref, onValue, set } from 'firebase/database'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCircle } from '@fortawesome/free-regular-svg-icons';
-import {faCircleCheck } from '@fortawesome/free-solid-svg-icons';
+import {faCircleCheck, faFloppyDisk, faX } from '@fortawesome/free-solid-svg-icons';
 
 const fetchList = (database, ID)=>{
   return new Promise((resolveContainer)=>{
@@ -31,6 +31,7 @@ function List(props){
   const [currentItems, setCurrentItems] = useState([]);
   const [currentListName, setCurrentListName] = useState("");
   const [currentID, setCurrentID] = useState("");
+  const [saveState, setSaveState] = useState({saveIcon: null, message:'', state:false});
   
 
   useEffect(()=>{
@@ -62,6 +63,8 @@ function List(props){
     
     // Set the new state
     setCurrentItems(updatedItems);
+    addChangeFunction(OnPushItemTask, targetItem, newTask);
+    setSaveState({saveIcon: faX, saveMessage:'Unsaved changes', state:false});
   }  
 
   const OnPushItemTask = (targetItem, newTask)=>{
@@ -69,6 +72,7 @@ function List(props){
     if(props.data.database){
       set(ref(props.data.database, 'Lists/'+currentID+'/Items/'+targetItem.id), targetItem)
       .then(()=>{
+        setSaveState({saveIcon: faFloppyDisk, saveMessage:'Changes saved', state:true, shouldFadeOut:false});
       })
       .catch((error)=>{
         console.log(error);
@@ -77,9 +81,16 @@ function List(props){
   }
 
   const OnChangeListName = (listID, newName)=>{
+    addChangeFunction(OnPushListName, listID, newName);
+    setCurrentListName(newName);
+    setSaveState({saveIcon: faX, saveMessage:'Unsaved changes', state:false});
+  }
+
+  const OnPushListName = (listID, newName)=>{
     if(props.data.database){
       set(ref(props.data.database, 'Lists/'+currentID+'/Name'), newName)
         .then(()=>{
+          setSaveState({saveIcon: faFloppyDisk, saveMessage:'Changes saved', state:true});
         })
         .catch((error)=>{
           console.log(error);
@@ -87,14 +98,31 @@ function List(props){
     }
   }
 
+  const changesFunction =useRef([]);
+
+  const addChangeFunction = (func, ...params)=>{
+    changesFunction.current.push({func, params});
+  }
+
+  const SaveChanges = (event)=>{
+    if(event.key !== 'Enter') return;
+    changesFunction.current.forEach(({func, params})=>func(...params));
+    changesFunction.current = [];    
+  }
+
 return (
 <div className="mainListView">
-  <div className="listName"><input value={currentListName} onChange={(event)=>setCurrentListName(event.target.value)} onBlur={(event)=>OnChangeListName(currentID, event.target.value)}></input></div>
+  {saveState.saveIcon && <div className={(saveState.state ? 'fadeOut' : 'fadeIn') +' saveProgressContainer'}>
+    <div className={(saveState.state ? 'saved' : 'unsaved') +' saveProgress'}>
+      <FontAwesomeIcon className='saveIcon' icon={saveState.saveIcon}/>{saveState.saveMessage}
+    </div>
+  </div>}
+  <div className="listName"><input value={currentListName} onKeyDown={SaveChanges} onChange={(event)=>OnChangeListName(currentID, event.target.value)} onBlur={(event)=>OnPushListName(currentID, event.target.value)}></input></div>
   <div className='listItems'>
   {currentItems.map(item => (
       <div key={item.id}>
         <FontAwesomeIcon className={((!item.checkmark) ? 'unchecked' : 'checked') + ' itemCheckIcon'} icon={(!item.checkmark) ? faCircle : faCircleCheck}/> 
-        <input className={((item.checkmark) ? 'itemNameCrossed' : '') +' itemName'} value={item.task} onBlur = {(event)=>OnPushItemTask(item, event.target.value)} onChange={(event)=>OnChangeItemTask(item, event.target.value)}/> 
+        <input className={((item.checkmark) ? 'itemNameCrossed' : '') +' itemName'} value={item.task} onKeyDown={SaveChanges} onBlur={(event)=>OnPushItemTask(item, event.target.value)} onChange={(event)=>OnChangeItemTask(item, event.target.value)}/> 
       </div>
   ))}
   </div>
