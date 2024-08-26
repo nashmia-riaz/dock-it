@@ -66,6 +66,7 @@ function Lists(){
                     <div className="userDetail" key='user'>{ currentUser ? (currentUser.email) : ''}</div>
                     <div className="sidebarButton"><button className='logoutButton' onClick={handleLogout}>Logout</button></div>
                 </div>
+                <hr className='sidebarBreak'/>
                 <div className='listsButtonsSidebar'>
                     <div className="sidebarButton">
                         <button className="createListButton">Create List</button>

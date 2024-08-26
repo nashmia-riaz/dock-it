@@ -2,8 +2,8 @@ import '../App.css'
 import {useState, useEffect, useRef} from "react";
 import {ref, onValue, set } from 'firebase/database'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCircle } from '@fortawesome/free-regular-svg-icons';
-import {faCircleCheck, faFloppyDisk, faX } from '@fortawesome/free-solid-svg-icons';
+import Item from './Item';
+import {faFloppyDisk, faX } from '@fortawesome/free-solid-svg-icons';
 
 const fetchList = (database, ID)=>{
   return new Promise((resolveContainer)=>{
@@ -32,14 +32,15 @@ function List(props){
   const [currentListName, setCurrentListName] = useState("");
   const [currentID, setCurrentID] = useState("");
   const [saveState, setSaveState] = useState({saveIcon: null, message:'', state:false});
-  
 
   useEffect(()=>{
+    console.log('page loaded');
+
     if(props){
       fetchList(props.data.database, props.data.listID).then((items)=>{
           const fetchedItems = [];
           Object.keys(items).forEach(element => {
-              fetchedItems.push(items[element]);
+            fetchedItems.push(items[element]);
           });
           setCurrentItems(fetchedItems);
       });
@@ -127,22 +128,24 @@ function List(props){
   }
 
 return (
-<div className="mainListView">
-  {saveState.saveIcon && <div className={(saveState.state ? 'fadeOut' : 'fadeIn') +' saveProgressContainer'}>
-    <div className={(saveState.state ? 'saved' : 'unsaved') +' saveProgress'}>
-      <FontAwesomeIcon className='saveIcon' icon={saveState.saveIcon}/>{saveState.saveMessage}
-    </div>
-  </div>}
-  <div className="listName"><input value={currentListName} onKeyDown={SaveChanges} onChange={(event)=>OnChangeListName(currentID, event.target.value)} onBlur={(event)=>OnPushListName(currentID, event.target.value)}></input></div>
-  <div className='listItems'>
-  {currentItems.map(item => (
-      <div key={item.id}>
-        <FontAwesomeIcon onClick={()=>OnToggleCheck(item)} className={((!item.checkmark) ? 'unchecked' : 'checked') + ' itemCheckIcon'} icon={(!item.checkmark) ? faCircle : faCircleCheck}/> 
-        <input className={((item.checkmark) ? 'itemNameCrossed' : '') +' itemName'} value={item.task} onKeyDown={SaveChanges} onBlur={(event)=>OnPushItemTask(item)} onChange={(event)=>OnChangeItemTask(item, event.target.value)}/> 
+  <div className="mainListView">
+    {saveState.saveIcon && <div className={(saveState.state ? 'fadeOut' : 'fadeIn') +' saveProgressContainer'}>
+      <div className={(saveState.state ? 'saved' : 'unsaved') +' saveProgress'}>
+        <FontAwesomeIcon className='saveIcon' icon={saveState.saveIcon}/>{saveState.saveMessage}
       </div>
-  ))}
+    </div>}
+    <div className="listName"><input value={currentListName} onKeyDown={SaveChanges} onChange={(event)=>OnChangeListName(currentID, event.target.value)} onBlur={(event)=>OnPushListName(currentID, event.target.value)}></input></div>
+    <div className='listItems'>
+    {currentItems.map(item => (
+        // <div key={item.id}>
+        //   <FontAwesomeIcon onClick={()=>OnToggleCheck(item)} className={((!item.checkmark) ? 'unchecked' : 'checked') + ' itemCheckIcon'} icon={(!item.checkmark) ? faCircle : faCircleCheck}/> 
+        //   <textarea ref={(el) => (textaAreaRefs.current[item.id] = el)} className={((item.checkmark) ? 'itemNameCrossed' : '') +' itemName'} value={item.task} onKeyDown={SaveChanges} onBlur={()=>OnPushItemTask(item)} onChange={(event)=>OnChangeItemTask(item, event.target.value)}/> 
+        // </div>
+        <Item key={item.id} data={{item:item, OnToggleCheck: OnToggleCheck, SaveChanges: SaveChanges, OnPushItemTask:OnPushItemTask, OnChangeItemTask:OnChangeItemTask}}></Item>
+    ))}
+    </div>
   </div>
-</div>);
+  );
 }
 
 export default List

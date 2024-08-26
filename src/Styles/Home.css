@@ -1,5 +1,7 @@
 
-body{
+body::before{
+    content:"";
+    z-index: -1;
     width: 100vw;
     background: url('../assets/Stars-Background.png') repeat;
     background-size: contain;
