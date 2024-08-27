@@ -1,6 +1,6 @@
 import '../App.css'
 import {useState, useEffect, useRef} from "react";
-import {ref, onValue, set, remove, push, child, onChildAdded, query, orderByChild } from 'firebase/database'
+import {ref, onValue, set, remove, push, child, onChildAdded, onChildRemoved, query, orderByChild } from 'firebase/database'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Item from './Item';
 import {faFloppyDisk, faX } from '@fortawesome/free-solid-svg-icons';
@@ -39,25 +39,25 @@ function List(props){
       setCurrentListName(props.data.listName);    
 
       onChildAdded(query(ref(props.data.database, 'Lists/'+props.data.listID+'/Items'), orderByChild('timestamp')), (data)=>HandleOnItemAdded(data));
-      console.log('attached handlers');
+      onChildRemoved(query(ref(props.data.database, 'Lists/'+props.data.listID+'/Items'), orderByChild('timestamp')), (data)=>HandleOnItemDeleted(data));
     }
   }, [props]);
 
-  const OnChangeItemTask = (targetItem, newTask)=>{
-    targetItem.task = newTask;
+  useEffect(()=>{
+    // console.log(currentItems);
+  }, [currentItems]);
 
-    // Create a new array with the updated object
-    const updatedItems = currentItems.map(item =>{            
-      if(item.id === targetItem.id) {
-        item.task = newTask;
-        item.timestamp = -Date.now();
-        return item;
-      }
-      else return item;
+  const OnChangeItemTask = (targetItem, newTask)=>{
+    setCurrentItems((prevItems)=>{
+      const items = [...prevItems];
+      items.forEach((item)=>{
+        if(item.id === targetItem.id){
+          item.task = newTask;
+        }
+      });
+      return items;
     });
-    
-    // Set the new state
-    setCurrentItems(updatedItems);
+
     addChangeFunction(OnPushItemTask, targetItem);
     setSaveState({saveIcon: faX, saveMessage:'Unsaved changes', state:false});
   }  
@@ -78,7 +78,6 @@ function List(props){
   const OnDeleteItem = (targetItem)=>{
     remove(ref(props.data.database, 'Lists/'+currentID+'/Items/'+targetItem.id))
     .then(()=>{
-      setCurrentItems(currentItems.filter(state=> state!==targetItem));
     })
     .catch((error)=>{
       console.log(error);
@@ -116,18 +115,16 @@ function List(props){
   }
 
   const OnToggleCheck= (targetItem)=>{
-    targetItem.checkmark = !targetItem.checkmark;
-
-    // Create a new array with the updated object
-    const updatedItems = currentItems.map(item =>{            
-      if(item.id === targetItem.id) {
-        item.checkmark = targetItem.checkmark;
-        return item;
-      }
-      else return item;
+    setCurrentItems((prevItems)=>{
+      var items = [...prevItems];
+      items.forEach((item)=>{
+        if(item.id === targetItem.id){
+          item.checkmark = !targetItem.checkmark;
+        }
+      });
+      items = SortItems(items);
+      return items;
     });
-
-    setCurrentItems(updatedItems);
     OnPushItemTask(targetItem);
   }
 
@@ -159,11 +156,19 @@ function List(props){
     addItem(item);
   }
 
+  const HandleOnItemDeleted = (data)=>{
+    setCurrentItems((prevItems)=>{
+      var items = SortItems([...prevItems]);
+      items = items.filter(state => state.id !== data.key);
+      return items;
+    });
+  }
+
   const addItem = (item)=>{
-    var tempItems = currentItems;
-    tempItems.push(item);
-    tempItems = SortItems(tempItems);
-    setCurrentItems(tempItems);
+    setCurrentItems((prevItems) => {
+      var items = SortItems([item, ...prevItems]);
+      return items;
+    });
   }
 
   const SortItems = (items)=>{
