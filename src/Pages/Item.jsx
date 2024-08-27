@@ -16,10 +16,10 @@ class Item extends Component{
             this.OnPushItemTask = props.data.OnPushItemTask;
             this.OnChangeItemTask = props.data.OnChangeItemTask;
             this.OnToggleCheck = props.data.OnToggleCheck;
+            this.OnDeleteItem = props.data.OnDeleteItem;
         }
     }
     
-
     componentDidUpdate(){
         const textArea = this.textAreaRef.current;
         if(textArea != null) {
@@ -38,10 +38,10 @@ class Item extends Component{
     }
 
     render(){return(
-    this.item && <div key={this.item.id}>
+    this.item && <div className='listItem' key={this.item.id}>
         <FontAwesomeIcon onClick={()=>this.OnToggleCheck(this.item)} className={((!this.item.checkmark) ? 'unchecked' : 'checked') + ' itemCheckIcon'} icon={(!this.item.checkmark) ? faCircle : faCircleCheck}/> 
         <textarea ref={this.textAreaRef} className={((this.item.checkmark) ? 'itemNameCrossed' : '') +' itemName'} value={this.item.task} onKeyDown={this.SaveChanges} onBlur={()=>this.OnPushItemTask(this.item)} onChange={(event)=>{this.OnChangeItemTask(this.item, event.target.value); }}/> 
-        <FontAwesomeIcon className='editItemButton' icon={faTrash}></FontAwesomeIcon>
+        <FontAwesomeIcon className='editItemButton' onClick={()=>this.OnDeleteItem(this.item)} icon={faTrash}></FontAwesomeIcon>
     </div>);
     }
 }

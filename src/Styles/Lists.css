@@ -146,7 +146,7 @@
     font-size: 1.2em;
     padding-top: 2em;
 }
-.listItems>div{
+.listItem, .addListItem{
     background-color: rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);  
@@ -154,7 +154,8 @@
     margin: 0.75em;    
     padding: 0.75em;
     border-radius: 0.5em; 
-    
+}
+.listItem{
     display: flex;
     flex-direction: row;
     transition: 0.5s;
@@ -234,4 +235,12 @@
 
 .editItemButton:hover{
     cursor:pointer;
+}
+.addListItem{
+    font-style: italic;
+    text-align: center;
+    transition: 0.5s;
+}
+.addListItem:hover{
+    cursor: pointer;
 }

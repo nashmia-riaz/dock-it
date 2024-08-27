@@ -1,6 +1,6 @@
 import '../App.css'
 import {useState, useEffect, useRef} from "react";
-import {ref, onValue, set } from 'firebase/database'
+import {ref, onValue, set, remove, push, child, onChildAdded, query, orderByChild } from 'firebase/database'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Item from './Item';
 import {faFloppyDisk, faX } from '@fortawesome/free-solid-svg-icons';
@@ -34,19 +34,12 @@ function List(props){
   const [saveState, setSaveState] = useState({saveIcon: null, message:'', state:false});
 
   useEffect(()=>{
-    console.log('page loaded');
-
     if(props){
-      fetchList(props.data.database, props.data.listID).then((items)=>{
-          const fetchedItems = [];
-          Object.keys(items).forEach(element => {
-            fetchedItems.push(items[element]);
-          });
-          setCurrentItems(fetchedItems);
-      });
-      
       setCurrentID(props.data.listID);
       setCurrentListName(props.data.listName);    
+
+      onChildAdded(query(ref(props.data.database, 'Lists/'+props.data.listID+'/Items'), orderByChild('timestamp')), (data)=>HandleOnItemAdded(data));
+      console.log('attached handlers');
     }
   }, [props]);
 
@@ -57,6 +50,7 @@ function List(props){
     const updatedItems = currentItems.map(item =>{            
       if(item.id === targetItem.id) {
         item.task = newTask;
+        item.timestamp = -Date.now();
         return item;
       }
       else return item;
@@ -79,6 +73,16 @@ function List(props){
         console.log(error);
       })
     }    
+  }
+
+  const OnDeleteItem = (targetItem)=>{
+    remove(ref(props.data.database, 'Lists/'+currentID+'/Items/'+targetItem.id))
+    .then(()=>{
+      setCurrentItems(currentItems.filter(state=> state!==targetItem));
+    })
+    .catch((error)=>{
+      console.log(error);
+    });
   }
 
   const OnChangeListName = (listID, newName)=>{
@@ -127,6 +131,54 @@ function List(props){
     OnPushItemTask(targetItem);
   }
 
+  const CreateEmptyItem = ()=>{
+    const itemKey = push(child(ref(props.data.database, 'Lists/'+currentID+'/Items'), 'Items')).key;
+
+    const newItem = {
+      id: itemKey,
+      checkmark:false,
+      task: 'New Task',
+      timestamp: -Date.now()
+    };
+
+    set(ref(props.data.database, 'Lists/'+currentID+'/Items/'+itemKey), newItem)
+    .then(()=>{
+    })
+    .catch((error)=>{
+      console.log(error);
+    });
+  }
+
+  const HandleOnItemAdded = (data)=>{
+    const item = {
+      id: data.val().id,
+      checkmark: data.val().checkmark,
+      task: data.val().task,
+      timestamp: data.val().timestamp
+    }
+    addItem(item);
+  }
+
+  const addItem = (item)=>{
+    var tempItems = currentItems;
+    tempItems.push(item);
+    tempItems = SortItems(tempItems);
+    setCurrentItems(tempItems);
+  }
+
+  const SortItems = (items)=>{
+    const checkedItems = []; const uncheckedItems =[];
+    items.forEach((item)=>{
+      if(item.checkmark) checkedItems.push(item);
+      else if(!item.checkmark) uncheckedItems.push(item);
+    });
+
+    const sortedCheckedItems = [...checkedItems].sort((a, b)=> a.timestamp - b.timestamp);
+    const sortedUncheckedItems = [...uncheckedItems].sort((a, b)=>a.timestamp - b.timestamp);
+    const allSortedItems = [...sortedUncheckedItems, ...sortedCheckedItems];
+    return allSortedItems;
+  }
+
 return (
   <div className="mainListView">
     {saveState.saveIcon && <div className={(saveState.state ? 'fadeOut' : 'fadeIn') +' saveProgressContainer'}>
@@ -136,12 +188,9 @@ return (
     </div>}
     <div className="listName"><input value={currentListName} onKeyDown={SaveChanges} onChange={(event)=>OnChangeListName(currentID, event.target.value)} onBlur={(event)=>OnPushListName(currentID, event.target.value)}></input></div>
     <div className='listItems'>
+    <div className='addListItem' onClick={CreateEmptyItem}>Create Task</div>
     {currentItems.map(item => (
-        // <div key={item.id}>
-        //   <FontAwesomeIcon onClick={()=>OnToggleCheck(item)} className={((!item.checkmark) ? 'unchecked' : 'checked') + ' itemCheckIcon'} icon={(!item.checkmark) ? faCircle : faCircleCheck}/> 
-        //   <textarea ref={(el) => (textaAreaRefs.current[item.id] = el)} className={((item.checkmark) ? 'itemNameCrossed' : '') +' itemName'} value={item.task} onKeyDown={SaveChanges} onBlur={()=>OnPushItemTask(item)} onChange={(event)=>OnChangeItemTask(item, event.target.value)}/> 
-        // </div>
-        <Item key={item.id} data={{item:item, OnToggleCheck: OnToggleCheck, SaveChanges: SaveChanges, OnPushItemTask:OnPushItemTask, OnChangeItemTask:OnChangeItemTask}}></Item>
+        <Item key={item.id} data={{item:item, OnToggleCheck: OnToggleCheck, SaveChanges: SaveChanges, OnPushItemTask:OnPushItemTask, OnChangeItemTask:OnChangeItemTask, OnDeleteItem: OnDeleteItem}}></Item>
     ))}
     </div>
   </div>
