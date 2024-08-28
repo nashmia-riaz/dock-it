@@ -1,6 +1,6 @@
 import '../App.css'
 import {useState, useEffect, useRef} from "react";
-import {ref, onValue, set, remove, push, child, onChildAdded, onChildRemoved, query, orderByChild } from 'firebase/database'
+import {ref, onValue, set, remove, push, child, onChildAdded, onChildRemoved, onChildChanged, query, orderByChild } from 'firebase/database'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Item from './Item';
 import {faFloppyDisk, faX } from '@fortawesome/free-solid-svg-icons';
@@ -35,17 +35,21 @@ function List(props){
 
   useEffect(()=>{
     if(props){
-      setCurrentID(props.data.listID);
-      setCurrentListName(props.data.listName);    
-
-      onChildAdded(query(ref(props.data.database, 'Lists/'+props.data.listID+'/Items'), orderByChild('timestamp')), (data)=>HandleOnItemAdded(data));
-      onChildRemoved(query(ref(props.data.database, 'Lists/'+props.data.listID+'/Items'), orderByChild('timestamp')), (data)=>HandleOnItemDeleted(data));
+      setCurrentID(props.data.listID ?? '');
     }
-  }, [props]);
+  }, [props.data.listID]);
 
   useEffect(()=>{
-    // console.log(currentItems);
-  }, [currentItems]);
+    if(currentID !== '' && currentID !== undefined){
+      setCurrentItems([]);
+      setCurrentListName(props.data.listName ?? '');    
+
+      onChildAdded(query(ref(props.data.database, 'Lists/'+props.data.listID+'/Items'), orderByChild('timestamp')), (data)=>HandleOnItemAdded(data));
+      onChildRemoved(ref(props.data.database, 'Lists/'+props.data.listID+'/Items'), (data)=>HandleOnItemDeleted(data));
+      onChildChanged(ref(props.data.database, 'Lists/'+props.data.listID+'/Items'), (data)=>HandleOnItemChanged(data));
+      onChildChanged(ref(props.data.database, 'Lists/'+props.data.listID), (data)=>HandleOnListNameChanged(data));
+      }
+  }, [currentID]);
 
   const OnChangeItemTask = (targetItem, newTask)=>{
     setCurrentItems((prevItems)=>{
@@ -63,8 +67,10 @@ function List(props){
   }  
 
   const OnPushItemTask = (targetItem)=>{
-    // targetItem.task = newTask;
+    
     if(props.data.database){
+      if(targetItem.timestamp == undefined || targetItem.timestampe == null)
+        targetItem.timestamp = -Date.now();
       set(ref(props.data.database, 'Lists/'+currentID+'/Items/'+targetItem.id), targetItem)
       .then(()=>{
         setSaveState({saveIcon: faFloppyDisk, saveMessage:'Changes saved', state:true, shouldFadeOut:false});
@@ -114,10 +120,10 @@ function List(props){
     changesFunction.current = [];    
   }
 
-  const OnToggleCheck= (targetItem)=>{
+const OnToggleCheck= (targetItem)=>{
     setCurrentItems((prevItems)=>{
       var items = [...prevItems];
-      items.forEach((item)=>{
+    items.forEach((item)=>{
         if(item.id === targetItem.id){
           item.checkmark = !targetItem.checkmark;
         }
@@ -162,6 +168,35 @@ function List(props){
       items = items.filter(state => state.id !== data.key);
       return items;
     });
+  }
+
+  const HandleOnItemChanged = (data)=>{
+    const newItem = {
+      id: data.val().id,
+      checkmark: data.val().checkmark,
+      task: data.val().task,
+      timestamp: data.val().timestamp
+    };
+
+    setCurrentItems((prevItems)=>{
+      var items = [...prevItems];
+      items.forEach((item)=>{
+        if(item.id === newItem.id){
+          item.task = newItem.task;
+          item.checkmark = newItem.checkmark;
+        }
+      });
+      items = SortItems(items);
+      return items;
+    });
+  }
+
+  const HandleOnListNameChanged = (data)=>{
+    if(data.key === 'Name'){
+      console.log(data);
+      if(data.ref.parent.key === currentID) 
+        setCurrentListName(data.val());
+    }
   }
 
   const addItem = (item)=>{

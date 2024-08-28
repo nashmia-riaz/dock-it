@@ -1,6 +1,6 @@
 import FirebaseInit from "./FirebaseInit"
 import { useEffect, useState } from "react";
-import { getDatabase, ref, onValue } from 'firebase/database'
+import { getDatabase, ref, onValue, onChildChanged } from 'firebase/database'
 import { useNavigate } from "react-router-dom";
 import '../Styles/Lists.css'
 import Logo from '../assets/Logo.png'
@@ -43,6 +43,9 @@ function Lists(){
 
                     Promise.all(listsPromises).then((results=>{
                         setLists(results);
+                        results.forEach((list)=>{
+                            onChildChanged(ref(database, 'Lists/'+list.id), (data)=>HandleOnListChanged(data));
+                        })
                         if(results.length > 0)
                             updateCurrentList(results[0].id, results[0].obj.Name);
                     }));
@@ -51,10 +54,27 @@ function Lists(){
 
             fetchLists(currentUser);
         }
+
     }, [currentUser]);
 
     const updateCurrentList = (newListID, newListName)=>{
         setCurrentList({id: newListID, name: newListName});
+    }
+
+    const HandleOnListChanged = (data)=>{
+        if(data.key === 'Name'){
+            console.log(data);
+            const listID = data.ref.parent.key;
+            setLists((prevLists)=>{
+                const lists = [...prevLists];
+                lists.forEach((list)=>{
+                    if(listID === list.id){
+                        list.obj.Name = data.val();
+                    }
+                });
+                return lists;
+            });
+        }
     }
 
     return (
@@ -72,7 +92,7 @@ function Lists(){
                         <button className="createListButton">Create List</button>
                     </div>
                     {lists.map((item) => (
-                        <div key={item.id} className={((currentList.id == item.id) ? 'listActive ': '' )+'listButton'} onClick={()=>updateCurrentList(item.id)}>
+                        <div key={item.id} className={((currentList.id == item.id) ? 'listActive ': '' )+'listButton'} onClick={()=>updateCurrentList(item.id, item.obj.Name)}>
                         {item.obj.Name}
                         </div>
                     ))}
