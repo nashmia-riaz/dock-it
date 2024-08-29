@@ -91,22 +91,40 @@
     width: calc(100% + 4em);
     margin-left: -2em;
     transition: 0.5s;    
-}
 
+    display: flex;
+    flex-direction: row;  
+    align-items: center; /* Vertically centers the content */
+    justify-content: center; 
+}
 .listButton:hover{
     cursor: pointer;
     box-shadow: 0 0 1em var(--background-color-tertiary);
     background-color: var(--background-color-tertiary);
     transform: scale(1, 1.05);
+    opacity: 1;
 }
-
+.listButton>p{
+    flex-grow: 1;
+    padding: 0;
+    margin: 0;
+    vertical-align: middle;
+}
+.listButton>svg{
+    flex-shrink: 1;
+    vertical-align: middle;
+    padding: 0.5em;
+    z-index: 5;
+}
+.listButton>svg:hover{
+    cursor: pointer;
+}
 .listActive{
     background-color: var(--background-color-highlight);
     border: none;
 }
-
-.checked{
-    color: var(--success-color);
+.listInactive{
+    opacity: 0.75;
 }
 .itemName{
     display: inline;

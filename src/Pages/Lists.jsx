@@ -1,10 +1,13 @@
 import FirebaseInit from "./FirebaseInit"
 import { useEffect, useState } from "react";
-import { getDatabase, ref, onValue, onChildChanged } from 'firebase/database'
+import { getDatabase, ref, onValue, onChildChanged, push, child, set, remove } from 'firebase/database'
 import { useNavigate } from "react-router-dom";
 import '../Styles/Lists.css'
 import Logo from '../assets/Logo.png'
 import List from './List'
+import generateRandomString from "../../Helper";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrash, faX, faShare } from '@fortawesome/free-solid-svg-icons';
 
 const database = getDatabase();
 
@@ -36,7 +39,7 @@ function Lists(){
                             return new Promise((resolve)=>{
                             const listRef = ref(database, 'Lists/'+listKey);
                             onValue(listRef, (snapshot2)=>{
-                                resolve({id: listKey, obj:snapshot2.val()});
+                                resolve({id: listKey, obj:snapshot2.val(), userListObj: snapshot1.val()[listKey]});
                             });
                         });
                     });
@@ -77,6 +80,61 @@ function Lists(){
         }
     }
 
+    const CreateList = ()=>{
+        const shareKey = generateRandomString(5);
+        const listKey = push(child(ref(database, 'Lists'), 'Items')).key;
+        const list = {
+            Name: 'New List',
+            Owner: currentUser.uid,
+            ShareKey: shareKey,
+        };
+
+        
+        set(ref(database, 'Lists/'+listKey), list)
+        .then(()=>{
+            const userList = {
+                isOwner: true,
+                shareKey: shareKey
+            };
+
+            set(ref(database, 'Users/'+currentUser.uid+'/Lists/'+listKey), userList).then(()=>{}).catch((error)=>console.log(error));
+        })
+        .catch((error)=>{
+        console.log(error);
+        });
+    }
+
+    const ShareList = (shareKey)=>{
+        console.log(shareKey);
+        event.stopPropagation(); 
+    }
+
+    const DeleteList = (list)=>{
+        event.stopPropagation(); 
+        if(currentUser.uid === list.obj.Owner){
+                remove(ref(database, 'Lists/'+list.id)).then(()=>{
+                    if(list.obj.UsersAccess){
+                        Object.keys(list.obj.UsersAccess).map((user)=>{
+                            console.log(user);
+                            remove(ref(database, 'Users/'+user+'/Lists/'+list.id)).then().catch((error)=>console.log(error));
+                        });                        
+                    }
+                    remove(ref(database, 'Users/'+currentUser.uid+'/Lists/'+list.id)).then().catch((error)=>console.log(error));
+                }).catch((error)=>console.log(error));
+        }
+    }
+
+    const RemoveList = (listID)=>{
+        event.stopPropagation(); 
+        remove(ref(database, 'Users/'+currentUser.uid+'/Lists/'+listID))
+        .then(()=>{
+            remove(ref(database, 'Lists/'+listID+'/UsersAcces/'+currentUser.uid)).then(()=>{}).catch((error)=>console.log(error));
+        })
+        .catch((error)=>{
+          console.log(error);
+        });
+    }
+
     return (
         <div>
             <div className="lists-sidebar">
@@ -89,11 +147,12 @@ function Lists(){
                 <hr className='sidebarBreak'/>
                 <div className='listsButtonsSidebar'>
                     <div className="sidebarButton">
-                        <button className="createListButton">Create List</button>
+                        <button className="createListButton" onClick={CreateList}>Create List</button>
                     </div>
                     {lists.map((item) => (
-                        <div key={item.id} className={((currentList.id == item.id) ? 'listActive ': '' )+'listButton'} onClick={()=>updateCurrentList(item.id, item.obj.Name)}>
-                        {item.obj.Name}
+                        <div key={item.id} className={((currentList.id == item.id) ? 'listActive ': 'listInactive ' )+'listButton'} onClick={()=>updateCurrentList(item.id, item.obj.Name)}>
+                        <p>{item.obj.Name}</p>
+                        {item.userListObj.isOwner ? (<><FontAwesomeIcon icon={faShare} onClick={()=>ShareList(item.userListObj.shareKey)}/><FontAwesomeIcon icon={faTrash} onClick={()=>DeleteList(item)}/></>) : <FontAwesomeIcon  icon={faX} onClick={()=>RemoveList(item.id)}/>}
                         </div>
                     ))}
                 </div>

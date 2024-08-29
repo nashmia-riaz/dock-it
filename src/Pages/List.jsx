@@ -66,8 +66,7 @@ function List(props){
     setSaveState({saveIcon: faX, saveMessage:'Unsaved changes', state:false});
   }  
 
-  const OnPushItemTask = (targetItem)=>{
-    
+  const OnPushItemTask = (targetItem)=>{    
     if(props.data.database){
       if(targetItem.timestamp == undefined || targetItem.timestampe == null)
         targetItem.timestamp = -Date.now();
@@ -121,16 +120,18 @@ function List(props){
   }
 
 const OnToggleCheck= (targetItem)=>{
+    targetItem.checkmark = !targetItem.checkmark;
     setCurrentItems((prevItems)=>{
       var items = [...prevItems];
-    items.forEach((item)=>{
+      items.forEach((item)=>{
         if(item.id === targetItem.id){
-          item.checkmark = !targetItem.checkmark;
+          item.checkmark = targetItem.checkmark;
         }
       });
       items = SortItems(items);
       return items;
     });
+
     OnPushItemTask(targetItem);
   }
 
