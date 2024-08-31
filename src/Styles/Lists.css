@@ -99,9 +99,8 @@
 }
 .listButton:hover{
     cursor: pointer;
-    box-shadow: 0 0 1em var(--background-color-tertiary);
-    background-color: var(--background-color-tertiary);
-    transform: scale(1, 1.05);
+    box-shadow: 0 0 1em var(--background-color-highlight);
+    background-color: var(--background-color-highlight);
     opacity: 1;
 }
 .listButton>p{
@@ -120,7 +119,7 @@
     cursor: pointer;
 }
 .listActive{
-    background-color: var(--background-color-highlight);
+    background-color: var(--background-color-tertiary);
     border: none;
 }
 .listInactive{
@@ -261,4 +260,21 @@
 }
 .addListItem:hover{
     cursor: pointer;
+}
+.checked{
+    color: var(--success-color);
+}
+.unchecked{
+    color: var(--secondary-font);
+}
+.listOptions{
+    position: absolute;
+    z-index: 9999;
+    background-color: var(--background-color-primary);
+    padding: 1em;
+    border-radius: 0.25em;
+    box-shadow: 0 0 1em var(--background-color-primary);
+}
+.listOption{
+    padding: 0.5em;
 }

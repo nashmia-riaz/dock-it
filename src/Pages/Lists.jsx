@@ -1,13 +1,14 @@
 import FirebaseInit from "./FirebaseInit"
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getDatabase, ref, onValue, onChildChanged, push, child, set, remove } from 'firebase/database'
 import { useNavigate } from "react-router-dom";
 import '../Styles/Lists.css'
 import Logo from '../assets/Logo.png'
 import List from './List'
+import ListOptions from "./ListOptions";
 import generateRandomString from "../../Helper";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash, faX, faShare } from '@fortawesome/free-solid-svg-icons';
+import { faTrash, faX, faShare, faEllipsis } from '@fortawesome/free-solid-svg-icons';
 
 const database = getDatabase();
 
@@ -59,6 +60,27 @@ function Lists(){
         }
 
     }, [currentUser]);
+
+    useEffect(()=>{
+        const handleClickOutside = (event) => {
+            console.log('clicked ', listOptionsDiv);
+            // Check if the clicked element is outside the div
+            if (listOptionsDiv.current && !listOptionsDiv.current.contains(event.target)) {
+              console.log('Clicked outside the div!');
+              // Do something when clicked outside the div
+              if(listOptionsVisible)
+                setListOptionsVisible(false);
+            }
+          };
+      
+          // Add event listener to the document
+          document.addEventListener('click', handleClickOutside);
+      
+          // Cleanup the event listener on component unmount
+          return () => {
+            document.removeEventListener('click', handleClickOutside);
+          };
+    }, []);
 
     const updateCurrentList = (newListID, newListName)=>{
         setCurrentList({id: newListID, name: newListName});
@@ -135,6 +157,15 @@ function Lists(){
         });
     }
 
+    const [listOptions, setListOptions] = useState({listID:'', isOwner:false, isVisible: false, position:{left: 0, top: 0}});
+    const [listOptionsVisible, setListOptionsVisible] = useState(false);
+    const ShowListOptions=(listID, isOwner, event)=>{
+        event.stopPropagation();
+        setListOptionsVisible(true);
+        setListOptions({listID: listID, isOwner: isOwner, position: {left: event.clientX, top: event.clientY}});
+    }    
+    const listOptionsDiv = useRef(null);
+
     return (
         <div>
             <div className="lists-sidebar">
@@ -152,7 +183,9 @@ function Lists(){
                     {lists.map((item) => (
                         <div key={item.id} className={((currentList.id == item.id) ? 'listActive ': 'listInactive ' )+'listButton'} onClick={()=>updateCurrentList(item.id, item.obj.Name)}>
                         <p>{item.obj.Name}</p>
-                        {item.userListObj.isOwner ? (<><FontAwesomeIcon icon={faShare} onClick={()=>ShareList(item.userListObj.shareKey)}/><FontAwesomeIcon icon={faTrash} onClick={()=>DeleteList(item)}/></>) : <FontAwesomeIcon  icon={faX} onClick={()=>RemoveList(item.id)}/>}
+                        <FontAwesomeIcon className='listOptionsButton' onClick={(event)=>ShowListOptions(item.id, item.userListObj.isOwner, event)} icon={faEllipsis}></FontAwesomeIcon>
+                        {listOptionsVisible && <ListOptions ref={listOptionsDiv} className='listOptions' data={listOptions}></ListOptions>}
+                        {/* {item.userListObj.isOwner ? (<><FontAwesomeIcon icon={faShare} onClick={()=>ShareList(item.userListObj.shareKey)}/><FontAwesomeIcon icon={faTrash} onClick={()=>DeleteList(item)}/></>) : <FontAwesomeIcon  icon={faX} onClick={()=>RemoveList(item.id)}/>} */}
                         </div>
                     ))}
                 </div>
