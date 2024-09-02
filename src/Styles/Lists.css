@@ -269,7 +269,6 @@
 }
 .listOptions{
     position: absolute;
-    z-index: 9999;
     background-color: var(--background-color-primary);
     padding: 1em;
     border-radius: 0.25em;
@@ -277,4 +276,48 @@
 }
 .listOption{
     padding: 0.5em;
+}
+.listOption:hover{
+    cursor: pointer;
+}
+.PopupContainer{
+    z-index: 999;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);  
+}
+
+.PopupModal{
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--background-color-primary);
+    padding: 1em;
+    width: 30%;
+    border-radius: 0.5em;
+    box-shadow: 0 0 1em var(--background-color-primary);
+}
+.PopupYesButton{
+    background-color: var(--success-color);
+}
+.PopupNoButton{
+    background-color: var(--error-color);
+}
+.PopupModal>button{
+    margin: 1em;
+}
+.ShareKeySpan{
+    display: block;
+    width: 50%;
+    margin: 0 auto;
+    background-color: var(--background-color-secondary);
+    padding: 0.75em;
+    border-radius: 0.5em;
+    font-style: italic;
 }
