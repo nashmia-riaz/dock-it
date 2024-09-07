@@ -9,6 +9,7 @@ import ListOptions from "./ListOptions";
 import generateRandomString from "../../Helper";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEllipsis } from '@fortawesome/free-solid-svg-icons';
+import PopupImportList from './PopupImportList';
 
 const database = getDatabase();
 
@@ -16,6 +17,7 @@ function Lists(){
     const [lists, setLists] = useState([]);    
     const [currentUser, setUser] = useState(null);
     const [currentList, setCurrentList] = useState([]);
+    const [popupImportVisible, setPopupImportVisible] = useState({isVisible: false});
 
     const navigate = useNavigate();
     const handleLogout = ()=>{
@@ -114,6 +116,16 @@ function Lists(){
         setListOptions({list: list, isVisible: true, position: {left: event.clientX, top: event.clientY}, HideListOptions: HideListOptions, database: database, user:currentUser});
     }    
 
+    const ImportList = ()=>{
+        // event.stopPropagation();
+        setPopupImportVisible({isVisible: true, 
+            Message: 'Paste the code below to import a list from your friend!', 
+            OnNo: ()=>{
+                setPopupImportVisible({isVisible: false, Message: '', OnYes: null, OnNo: null});
+        }
+        });
+    }
+
     return (
         <div>
             <div className="lists-sidebar">
@@ -127,6 +139,7 @@ function Lists(){
                 <div className='listsButtonsSidebar'>
                     <div className="sidebarButton">
                         <button className="createListButton" onClick={CreateList}>Create List</button>
+                        <button className="createListButton" onClick={ImportList}>Import List</button>
                     </div>
                     {lists.map((item) => (
                         <div key={item.id} className={((currentList.id == item.id) ? 'listActive ': 'listInactive ' )+'listButton'} onClick={()=>updateCurrentList(item.id, item.obj.Name)}>
@@ -138,7 +151,8 @@ function Lists(){
                 </div>
             </div>
             {(currentList.id) ? <List data={{database: database, listID: currentList.id, listName:currentList.name}}/> : ''}            
-            <ListOptions className='listOptions' data={listOptions}></ListOptions>
+            <ListOptions className='listOptions' data={listOptions}></ListOptions>            
+            {(popupImportVisible.isVisible) && <PopupImportList data={popupImportVisible}></PopupImportList>}
         </div>
     )
 }

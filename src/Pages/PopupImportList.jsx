@@ -1,6 +1,5 @@
-import Popup from './Popup';
-
-class PopupExportCode extends Popup{
+import Popup from "./Popup";
+class PopupImportList extends Popup{
     constructor(props){
         super(props);
     }
@@ -10,11 +9,10 @@ class PopupExportCode extends Popup{
         <div className='PopupContainer'>
             <div className='PopupModal' ref={this.popupRef}>
                 <p>{this.props.data.Message}</p>
-                <span className='ShareKeySpan'>{this.props.data.ShareKey}</span>
                 <button className="PopupNoButton" onClick={this.props.data.OnNo}>Close</button>
             </div>
         </div>);
     }   
 }
 
-export default PopupExportCode;
+export default PopupImportList;

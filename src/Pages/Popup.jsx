@@ -1,45 +1,51 @@
-import { useState, useEffect, useRef } from "react";
+import React, { Component } from "react";
 
-function Popup(props){    
-    const popupRef = useRef(null);
-    const [isVisible, setVisibility] = useState(false);
+class Popup extends Component{
+    handleClickOutside(event) {
+        // event.stopPropagation(); 
+        console.log('clicked outside ',this.popupRef.current);
+        console.log('isvisible ', this.isVisible);
 
-    useEffect(()=>{
-        const handleClickOutside = (event) => {
-            event.stopPropagation(); 
-            
-            // Check if the clicked element is outside the div
-            if (popupRef.current && !popupRef.current.contains(event.target)) {
-                if(isVisible){
-                    props.data.OnNo();
-                    setVisibility(false);
-                }
+        // Check if the clicked element is outside the div
+        if (this.popupRef.current) {
+            if(this.isVisible && !this.popupRef.current.contains(event.target)){
+                 this.props.data.OnNo();
+                this.isVisible = false;
+            }else if (!this.isVisible){
+                this.isVisible = true;
             }
-          };
-      
-          // Add event listener to the document
-          document.addEventListener('click', handleClickOutside);
-      
-          // Cleanup the event listener on component unmount
-          return () => {
-            document.removeEventListener('click', handleClickOutside);
-          };
-    }, [isVisible]);
+        }
+    }
 
-    useEffect(()=>{
-        setVisibility(props.data.isVisible);
-    }, [props.data.isVisible]);
+    constructor (props){  
+        super(props);
+        
+        this.isVisible = false;
+        this.props = props;
+        this.popupRef = React.createRef();
+        this.handleClickOutside = this.handleClickOutside.bind(this); 
+    }
 
+    componentDidMount(){
+        document.addEventListener('click', this.handleClickOutside);
+    }
 
-    return (
-        <div className='PopupContainer'>
-            <div className='PopupModal' ref={popupRef}>
-                <p>{props.data.Message}</p>
-                <button className="PopupYesButton" onClick={props.data.OnYes}>Yes</button>
-                <button className="PopupNoButton" onClick={props.data.OnNo}>No</button>
+    componentWillUnmount(){
+        document.removeEventListener('click', this.handleClickOutside);
+        this.isVisible = false;
+    }
+
+    render(){     
+        return (
+            <div className='PopupContainer'>
+                <div className='PopupModal' ref={this.popupRef}>
+                    <p>{this.props.data.Message}</p>
+                    <button className="PopupYesButton" onClick={this.props.data.OnYes}>Yes</button>
+                    <button className="PopupNoButton" onClick={this.props.data.OnNo}>No</button>
+                </div>
             </div>
-        </div>
-    );
+        );
+    }
 }
 
 export default Popup;

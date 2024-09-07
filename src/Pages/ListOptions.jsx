@@ -1,7 +1,7 @@
 import {useEffect, useRef, useState} from 'react';
 import { ref, remove } from 'firebase/database'
 import Popup from './Popup';
-import PopupCode from './PopupCode';
+import PopupExportCode from './PopupCode';
 
 function DeleteList(database, currentUser, list){
     event.stopPropagation(); 
@@ -56,8 +56,6 @@ function ListOptions (props){
     }, [props.data.isVisible]);
     
     const OnClickDeleteList = (database, user, list) => {
-        event.stopPropagation(); 
-
         SetShowPopup({isVisible: true, Message: 'Are you sure you want to delete this list? This action cannot be undone.', 
             OnYes: ()=>{
                 DeleteList(database, user, list);
@@ -71,8 +69,6 @@ function ListOptions (props){
     }
 
     const OnClickRemoveList = (database, user, listID)=>{
-        event.stopPropagation(); 
-
         SetShowPopup({isVisible: true, Message: 'Are you sure you want to remove this list from your library?', 
             OnYes: ()=>{
                 RemoveList(database, user, listID);
@@ -87,9 +83,8 @@ function ListOptions (props){
     }
     
     const ShareList = (shareKey) =>{
-        event.stopPropagation(); 
-        
-        SetShowPopupCode({isVisible: true, 
+        SetShowPopupCode({
+            isVisible: true, 
             Message: 'Use the code to share your list with a friend!', 
             ShareKey: shareKey,
             OnNo: ()=>{
@@ -111,7 +106,7 @@ function ListOptions (props){
                 </div>}
             </div>
             {(popup.isVisible) && <Popup data={popup}></Popup>}
-            {(popupCode.isVisible) && <PopupCode data={popupCode}></PopupCode>}
+            {(popupCode.isVisible) && <PopupExportCode data={popupCode}></PopupExportCode>}
         </div>
     )
     
