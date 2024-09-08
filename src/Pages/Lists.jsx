@@ -8,7 +8,7 @@ import List from './List'
 import ListOptions from "./ListOptions";
 import generateRandomString from "../../Helper";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEllipsis } from '@fortawesome/free-solid-svg-icons';
+import { faEllipsis, faUser } from '@fortawesome/free-solid-svg-icons';
 import PopupImportList from './PopupImportList';
 
 const database = getDatabase();
@@ -132,7 +132,7 @@ function Lists(){
                 <div className='app-details'>
                     <div className="logo"><img src={Logo} alt="" /></div>
                     <div className="buymeacoffee"></div>
-                    <div className="userDetail" key='user'>{ currentUser ? (currentUser.email) : ''}</div>
+                    <div className="userDetail" key='user'><FontAwesomeIcon icon={faUser}></FontAwesomeIcon>{ currentUser ? (currentUser.email) : ''}</div>
                     <div className="sidebarButton"><button className='logoutButton' onClick={handleLogout}>Logout</button></div>
                 </div>
                 <hr className='sidebarBreak'/>

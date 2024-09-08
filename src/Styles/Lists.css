@@ -13,12 +13,9 @@
     width: 100%;
     transition: 0.5s;    
 }
-
 .sidebarButton{
-    /* width:-moz-calc(100% + 4em);
-    width: calc(100% + 4em); */
-    width: calc(100% + 4em);
-    margin-left:    -2em;
+    width:calc(100% - 4em);
+    margin-left:    2em;
     box-sizing: border-box;
 }
 
@@ -38,7 +35,7 @@
     height: 100vh;
     width: 20vw;
     
-    padding: 4em;
+    padding: 4em 0;
     box-sizing: border-box;
 
     display: flex;
@@ -55,6 +52,10 @@
 .lists-sidebar>div{
     text-align: left;
 }
+.lists-sidebar>hr{
+    margin: 2em 2em;
+    width: calc(100% - 4em);
+}
 .logoutButton{
     width: 100%;
 }
@@ -69,12 +70,18 @@
     width: 40%;
 }
 .app-details>.logo{
-    padding: 0;
+    /* padding: 0; */
+    margin-left: 2em;
+    left: 2em;
 }
-
+.listsButtonsSidebar{
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    width: 100%;
+}
 .listsButtonsSidebar, .app-details
 {
-    margin-top: 2em;
     width: calc(100% + 4em);
     margin-left:    -2em;
 }
@@ -83,13 +90,24 @@
     margin-left: -2em; */
     box-sizing: border-box;
 }
+.userDetail{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;font-size: 1vw;
+    margin-bottom: 1em;
+    margin-left: 4em;
+}
+.userDetail>svg{
+    margin-right: 0.5em;
+}
 .listButton{
     box-sizing: border-box;
     padding:1em;
     margin-top: 0.5em;
     border: 0.14em solid var(--background-color-tertiary);
-    width: calc(100% + 4em);
-    margin-left: -2em;
+    width: calc(100% - 4em);
+    margin-left: 2em;
     transition: 0.5s;    
 
     display: flex;
@@ -161,7 +179,8 @@
 }
 .listItems{
     font-size: 1.2em;
-    padding-top: 2em;
+    overflow-y: auto;
+    height: 80%;
 }
 .listItem, .addListItem{
     background-color: rgba(0, 0, 0, 0.3);
@@ -208,11 +227,11 @@
     width: auto;
     font-size: 2em;
     position: fixed;
-    top: 3em;
-    left: calc(50%);
+    top: 2em;
+    left: calc(20vw);
+    width: 80vw;
 }
 .listName>input{
-
     background: none;
     text-decoration: underline;
     font-style:italic;

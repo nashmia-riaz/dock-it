@@ -2,10 +2,6 @@ import React, { Component } from "react";
 
 class Popup extends Component{
     handleClickOutside(event) {
-        // event.stopPropagation(); 
-        console.log('clicked outside ',this.popupRef.current);
-        console.log('isvisible ', this.isVisible);
-
         // Check if the clicked element is outside the div
         if (this.popupRef.current) {
             if(this.isVisible && !this.popupRef.current.contains(event.target)){
