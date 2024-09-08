@@ -1,6 +1,6 @@
 import FirebaseInit from "./FirebaseInit"
 import { useEffect, useState } from "react";
-import { getDatabase, ref, onValue, onChildChanged, push, child, set } from 'firebase/database'
+import { getDatabase, ref, query, onValue, onChildChanged, push, child, set, orderByChild, equalTo } from 'firebase/database'
 import { useNavigate } from "react-router-dom";
 import '../Styles/Lists.css'
 import Logo from '../assets/Logo.png'
@@ -110,16 +110,36 @@ function Lists(){
     const HideListOptions=()=>{
         setListOptions({listID:'', isOwner:false, isVisible: false, position:{left: 0, top: 0}});
     }
-    const [listOptions, setListOptions] = useState({listID:'', isOwner:false, isVisible: false, position:{left: 0, top: 0}, HideListOptions: HideListOptions});
+    const [listOptions, setListOptions] = useState({list: null, isOwner:false, isVisible: false, position:{left: 0, top: 0}, HideListOptions: HideListOptions});
     const ShowListOptions=(event, list)=>{
         event.stopPropagation();
         setListOptions({list: list, isVisible: true, position: {left: event.clientX, top: event.clientY}, HideListOptions: HideListOptions, database: database, user:currentUser});
     }    
 
     const ImportList = ()=>{
-        // event.stopPropagation();
         setPopupImportVisible({isVisible: true, 
             Message: 'Paste the code below to import a list from your friend!', 
+            OnYes: (code)=>{
+                const codeQuery = query(ref(database, 'Lists'), orderByChild('ShareKey'), equalTo(code));
+                onValue(codeQuery, (snapshot)=>{
+                    if(Object.keys(snapshot.val()).length == 1){
+                        const listKey = Object.keys(snapshot.val())[0];
+                        set(ref(database, 'Lists/'+listKey+'/UsersAccess/'+currentUser.uid), '')
+                        .then(()=>{
+                            const userList = {
+                                isOwner: false,
+                                shareKey: code
+                            };
+
+                            set(ref(database, 'Users/'+currentUser.uid+'/Lists/'+listKey), userList).then(()=>{}).catch((error)=>console.log(error));
+                        })
+                        .catch((error)=>{
+                            console.log(error);
+                        });
+                        console.log(Object.keys(snapshot.val())[0]);
+                    }
+                });
+            },
             OnNo: ()=>{
                 setPopupImportVisible({isVisible: false, Message: '', OnYes: null, OnNo: null});
         }
@@ -145,7 +165,6 @@ function Lists(){
                         <div key={item.id} className={((currentList.id == item.id) ? 'listActive ': 'listInactive ' )+'listButton'} onClick={()=>updateCurrentList(item.id, item.obj.Name)}>
                         <p>{item.obj.Name}</p>
                         <FontAwesomeIcon className='listOptionsButton' onClick={(event)=>ShowListOptions(event, item)} icon={faEllipsis}></FontAwesomeIcon> 
-                        {/* {item.userListObj.isOwner ? (<><FontAwesomeIcon icon={faShare} onClick={()=>ShareList(item.userListObj.shareKey)}/><FontAwesomeIcon icon={faTrash} onClick={()=>DeleteList(item)}/></>) : <FontAwesomeIcon  icon={faX} onClick={()=>RemoveList(item.id)}/>} */}
                         </div>
                     ))}
                 </div>
