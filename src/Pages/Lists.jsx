@@ -1,5 +1,5 @@
 import FirebaseInit from "./FirebaseInit"
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getDatabase, ref, query, onValue, onChildChanged, push, child, set, orderByChild, equalTo } from 'firebase/database'
 import { useNavigate } from "react-router-dom";
 import '../Styles/Lists.css'
@@ -8,7 +8,7 @@ import List from './List'
 import ListOptions from "./ListOptions";
 import generateRandomString from "../../Helper";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEllipsis, faUser } from '@fortawesome/free-solid-svg-icons';
+import { faEllipsis, faUser, faBars } from '@fortawesome/free-solid-svg-icons';
 import PopupImportList from './PopupImportList';
 
 const database = getDatabase();
@@ -146,9 +146,16 @@ function Lists(){
         });
     }
 
+    const [showSidebar, setShowSidebar] = useState(false);
+    const EnableMenu = (event, enable)=>{
+        event.stopPropagation();
+        setShowSidebar(enable);
+    }
+
     return (
         <div>
-            <div className="lists-sidebar">
+            <div className="showMenuButton"><FontAwesomeIcon icon={faBars} onClick={(event)=>EnableMenu(event, true)}></FontAwesomeIcon></div>
+            <div className={(showSidebar ? "showSidebar" : "hideSidebar") + " lists-sidebar"}>
                 <div className='app-details'>
                     <div className="logo"><img src={Logo} alt="" /></div>
                     <div className="buymeacoffee"></div>
@@ -172,6 +179,7 @@ function Lists(){
             {(currentList.id) ? <List data={{database: database, listID: currentList.id, listName:currentList.name}}/> : ''}            
             <ListOptions className='listOptions' data={listOptions}></ListOptions>            
             {(popupImportVisible.isVisible) && <PopupImportList data={popupImportVisible}></PopupImportList>}
+            {(showSidebar) && <div onClick={(event)=>EnableMenu(event, false)} className={(showSidebar ? 'showSidebar': 'hideSidebar')+' sidebarBackground'}></div>}
         </div>
     )
 }

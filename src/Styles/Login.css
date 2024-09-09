@@ -25,7 +25,8 @@ form{
 }
 
 input{
-    padding: 0.5em 0;
+    box-sizing: border-box;
+    padding: 0.75em;
     border-width: 0;
     border-radius: 0.2em;
     background-color: var(--background-color-secondary);
@@ -50,4 +51,11 @@ body{
 
 .error{
     color: var(--error-color);
+}
+
+@media only screen and (max-width: 600px){
+    .OnboardingContainer{
+        width: 80%;
+    }
+
 }

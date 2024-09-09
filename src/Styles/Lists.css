@@ -9,6 +9,7 @@
     border-radius: 0; 
     box-sizing: border-box;
     padding:1em;
+    font-size: 1em;
     margin-top: 0.5em;
     width: 100%;
     transition: 0.5s;    
@@ -69,11 +70,6 @@
 .app-details>.logo>img{
     width: 40%;
 }
-.app-details>.logo{
-    /* padding: 0; */
-    margin-left: 2em;
-    left: 2em;
-}
 .listsButtonsSidebar{
     height: 100%;
     overflow-y: auto;
@@ -85,18 +81,19 @@
     width: calc(100% + 4em);
     margin-left:    -2em;
 }
-.app-details>div{  
-    /* width: calc(100% + 4em);
-    margin-left: -2em; */
+.app-details>div{ 
     box-sizing: border-box;
 }
-.userDetail{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;font-size: 1vw;
+.userDetail, .logo{
+    /* display: flex;
+    justify-content: left;
+    align-items: left;
+    text-align: left; */
+    
+    font-size: 1vw;
     margin-bottom: 1em;
     margin-left: 4em;
+    padding: 0;
 }
 .userDetail>svg{
     margin-right: 0.5em;
@@ -345,4 +342,83 @@
     margin: 1em 0;
     padding: 1em;
     text-align: center;
+}
+
+.showMenuButton{
+    display: none;
+}
+.sidebarBackground{
+    opacity: 0;
+}
+.hideSidebar{
+}
+
+@media only screen and (max-width: 600px){
+    .lists-sidebar{
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100vh;
+        width: 50vw;
+        z-index: 999;
+    }
+    .mainListView{
+        left: 0;
+        width: 100%;
+        padding: 1em;
+    }
+    .listName{
+        left: 0;
+        width: 100%;
+    }
+    .showMenuButton{
+        display:inline;
+        position: fixed;
+        left: 1em;
+        top: 1em;
+        font-size: 1.6em;
+        padding: 0;
+    }
+    .showMenuButton:hover{
+        cursor: pointer;
+    }
+
+    .hideSidebar{
+        opacity: 0!important;
+        transform: translate(-100%, 0);
+        transition: 0.5s ease-out;
+    }
+
+    .showSidebar{
+        opacity: 1!important;
+        transition: 0.5s ease-out;
+        transform: translate(0, 0);
+    }
+
+    .sidebarBackground{
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0.5, 0.5, 0.5, 0.5);
+        position: fixed;
+        top: 0; left: 0;
+    }
+    .app-details>.logo{
+        padding-left: 2em;
+        margin-left: 0;
+    }
+    .app-details{
+        left: 0;
+        margin-left: 5em;
+        flex: none;
+        display: inline;
+        width: 100%!important; margin: 0;
+    }
+    .app-details>.sidebarButton{
+        padding: 0; margin: 0;
+        width: 100%;
+    }
+    .userDetail{
+        font-size: 0.75em;
+        padding-left: 1em; margin: 1em 0;
+    }
 }

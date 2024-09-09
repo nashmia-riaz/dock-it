@@ -205,3 +205,40 @@ body::before{
         transform: rotate(0deg);
     }
 }
+
+@media only screen and (max-width: 600px){
+    .HomeContainer{
+        width: 80%;
+    }
+
+    #HomeStar3{
+        left: 10%;
+        width: 7%;
+    }
+
+    #HomeStar2{
+        top: 10%;
+        right: 10%;
+        width: 12%;
+    }
+
+    #HomeStar1{
+        width: 5%;
+    }
+
+    #HomeStar4{
+        width: 5%;
+        right: 5%;
+    }
+
+    #HomeRocket{
+        width: 14%;
+        top: 5%;
+    }
+    #HomePlanet{
+        width: 30%;
+        bottom: 2%;
+        right: 5%;
+    }
+
+}
