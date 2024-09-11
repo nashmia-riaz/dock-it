@@ -51,7 +51,10 @@ body{
 
 .error{
     color: var(--error-color);
+    min-height: 1em;
+    font-size: 1em;
 }
+
 
 @media only screen and (max-width: 600px){
     .OnboardingContainer{
