@@ -42,7 +42,7 @@ class FormBase extends Component{
               ...prevState.loginData,  // Preserve other values in loginData
               [name]: value,  // Dynamically update specific input field
             },
-          }));
+        }));
     }
 
     render(){

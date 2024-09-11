@@ -54,11 +54,32 @@ body{
     min-height: 1em;
     font-size: 1em;
 }
+.MartyWave{
+    position: fixed;
+    width: 20%;
+    right: 0; bottom: 0;
+}
+.Rocket{
+    position: fixed;
+    left: 5%; top: 5%;
+    width: 10%;
+    transform: rotateZ(15deg);
+}
 
-
-@media only screen and (max-width: 600px){
+@media only screen and (max-width:600px){
     .OnboardingContainer{
         width: 80%;
+    }
+    
+    .MartyWave{
+        position: fixed;
+        width: 30%;
+    }
+    .Rocket{
+        position: fixed;
+        left: 10%; top: 2%;
+        width: 12%;
+        transform: rotateZ(25deg);
     }
 
 }
