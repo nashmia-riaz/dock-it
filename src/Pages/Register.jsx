@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import FormBase from './FormBase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import FirebaseInit from './FirebaseInit'
+import Helper from '../../Helper';
 
 function withNavigate(Component) {
     return function WrappedComponent(props) {
@@ -26,7 +27,7 @@ class Register extends FormBase{
         createUserWithEmailAndPassword(FirebaseInit.auth, email, password). 
         then((userCredential) =>{
             const user = userCredential.user;
-            this.props.navigate('/lists', {state: user.email});
+            this.props.navigate(Helper.references.baseURL + '/lists', {state: user.email});
         }).catch((error)=>{
             const errorMessage = error.message;
             this.setState(() => ({
@@ -40,6 +41,7 @@ class Register extends FormBase{
 
     constructor(){
         super();
+        this.buttonName = 'REGISTER';
         this.registerUserWithFirebase = this.registerUserWithFirebase.bind(this);
     }
 

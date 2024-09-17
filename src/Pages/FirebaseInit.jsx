@@ -1,6 +1,7 @@
 
 import {  initializeApp } from 'firebase/app'
 import {  getAuth, browserLocalPersistence, signOut } from 'firebase/auth'
+import Helper from '../../Helper';
 
 const firebaseConfig = {
     apiKey: "AIzaSyDVGWGzZzzK6CuIO_c53kKI5khsjc9E0IM",
@@ -21,7 +22,7 @@ auth.setPersistence(browserLocalPersistence);
 function SignOut(navigate){
   signOut(auth).
   then(()=>{
-    navigate('/');
+    navigate(Helper.references.baseURL);
   }).
   catch((error)=>{
     console.log(error);
@@ -30,9 +31,9 @@ function SignOut(navigate){
 
 function RedirectLogin(currentUser, navigate){
     if (currentUser) 
-      navigate('/lists');
+      navigate(Helper.references.baseURL + '/lists');
     else
-      navigate('/');
+      navigate(Helper.references.baseURL);
 }
 
 export default {app, auth, SignOut, RedirectLogin};

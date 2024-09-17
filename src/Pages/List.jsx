@@ -1,31 +1,9 @@
 import '../App.css'
 import {useState, useEffect, useRef} from "react";
-import {ref, onValue, set, remove, push, child, onChildAdded, onChildRemoved, onChildChanged, query, orderByChild } from 'firebase/database'
+import {ref, set, remove, push, child, onChildAdded, onChildRemoved, onChildChanged, query, orderByChild } from 'firebase/database'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Item from './Item';
 import {faFloppyDisk, faX } from '@fortawesome/free-solid-svg-icons';
-
-const fetchList = (database, ID)=>{
-  return new Promise((resolveContainer)=>{
-       const listsRefID = ref(database, 'Lists/'+ID+'/Items');           
-
-      //first we fetch the ID of the lists this user has access to
-      onValue(listsRefID, (snapshot)=>{
-          const itemPromises = Object.keys(snapshot.val()).map((itemKey)=>{
-              return new Promise((resolve)=>{
-                  const itemRef = ref(database, 'Lists/'+ID+'/Items/'+itemKey);
-                  onValue(itemRef, (snapshot2)=>{
-                      resolve (snapshot2.val());
-                  })
-              });
-          });
-
-          Promise.all(itemPromises).then((results)=>{
-              resolveContainer(results);            
-          });
-      });
-  });
-};
 
 function List(props){
   const [currentItems, setCurrentItems] = useState([]);
@@ -38,6 +16,10 @@ function List(props){
       setCurrentID(props.data.listID ?? '');
     }
   }, [props.data.listID]);
+
+  useEffect(()=>{
+    console.log(props.data);
+  },[]);
 
   useEffect(()=>{
     if(currentID !== '' && currentID !== undefined){
@@ -194,7 +176,6 @@ const OnToggleCheck= (targetItem)=>{
 
   const HandleOnListNameChanged = (data)=>{
     if(data.key === 'Name'){
-      console.log(data);
       if(data.ref.parent.key === currentID) 
         setCurrentListName(data.val());
     }

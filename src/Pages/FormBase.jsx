@@ -26,9 +26,7 @@ class FormBase extends Component{
 
     componentWillUnmount(){}
     
-    submitForm(){
-        // registerUserWithFirebase(data.email, data.password, data.password2, navigate, setError);
-    }
+    submitForm(){    }
     
     handleSubmit(e){
         e.preventDefault();
@@ -57,13 +55,13 @@ class FormBase extends Component{
                 <input type="password" name='password' value={this.state.loginData.password} onChange={this.handleChange} />
             </div>
             <div>
-                <label>PASSWORD</label>
+                <label>RETYPE PASSWORD</label>
                 <input type="password" name='password2' value={this.state.loginData.password2} onChange={this.handleChange} />
             </div>
             <div>
                 <p className='error' style={{ visibility: this.state.error.visible ? 'visible' : 'hidden'}}>{this.state.error.message}</p>
             </div>
-            <div><button type="submit" className='OnboardingSubmitButton'>REGISTER</button></div>
+            <div><button type="submit" className='OnboardingSubmitButton'>{this.buttonName}</button></div>
         </form>
         )
     }

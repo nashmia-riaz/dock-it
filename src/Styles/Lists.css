@@ -289,6 +289,7 @@
     padding: 1em;
     border-radius: 0.25em;
     box-shadow: 0 0 1em var(--background-color-primary);
+    z-index: 999;
 }
 .listOption{
     padding: 0.5em;
@@ -353,6 +354,28 @@
 .hideSidebar{
 }
 
+.ListsEmptyContainer{
+    width: calc(100vw - 20vw);
+    position: fixed;
+    right: 0;
+    top: 0;
+    height: 100vh;
+
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-wrap: nowrap;
+    flex-flow: column;
+    align-items: center;
+    justify-content: center; 
+}
+.ListsEmptyContainer>img{
+    width:20%;
+    display: block;
+    margin: 0 auto;
+}
+
 @media only screen and (max-width: 600px){
     .lists-sidebar{
         position: fixed;
@@ -378,6 +401,7 @@
         top: 1em;
         font-size: 1.6em;
         padding: 0;
+        z-index: 999;
     }
     .showMenuButton:hover{
         cursor: pointer;
@@ -393,6 +417,7 @@
         opacity: 1!important;
         transition: 0.5s ease-out;
         transform: translate(0, 0);
+        z-index: 2;
     }
 
     .sidebarBackground{
@@ -401,6 +426,7 @@
         background-color: rgba(0.5, 0.5, 0.5, 0.5);
         position: fixed;
         top: 0; left: 0;
+        z-index: 1;
     }
     .app-details>.logo{
         padding-left: 2em;
@@ -420,5 +446,17 @@
     .userDetail{
         font-size: 0.75em;
         padding-left: 1em; margin: 1em 0;
+    }
+    .ListsEmptyContainer{
+        z-index: 1;
+        width: 100vw;
+        padding: 1em;
+        box-sizing: border-box;
+    }
+    .ListsEmptyContainer>img{
+        width: 50%;
+    }
+    .PopupModal{
+        width: 80vw;
     }
 }

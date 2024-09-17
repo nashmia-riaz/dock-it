@@ -1,15 +1,16 @@
 import FirebaseInit from "./FirebaseInit"
-import { useEffect, useRef, useState } from "react";
-import { getDatabase, ref, query, onValue, onChildChanged, push, child, set, orderByChild, equalTo } from 'firebase/database'
+import { useEffect, useState } from "react";
+import { getDatabase, ref, query, onValue, onChildChanged, onChildRemoved, push, child, set, orderByChild, equalTo } from 'firebase/database'
 import { useNavigate } from "react-router-dom";
 import '../Styles/Lists.css'
 import Logo from '../assets/Logo.png'
 import List from './List'
 import ListOptions from "./ListOptions";
-import generateRandomString from "../../Helper";
+import Helper from "../../Helper";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEllipsis, faUser, faBars } from '@fortawesome/free-solid-svg-icons';
 import PopupImportList from './PopupImportList';
+import ListsEmpty from "./ListsEmpty";
 
 const database = getDatabase();
 
@@ -18,6 +19,7 @@ function Lists(){
     const [currentUser, setUser] = useState(null);
     const [currentList, setCurrentList] = useState([]);
     const [popupImportVisible, setPopupImportVisible] = useState({isVisible: false});
+    const [areListsEmpty, setListsEmpty] = useState(false);
 
     const navigate = useNavigate();
     const handleLogout = ()=>{
@@ -33,28 +35,37 @@ function Lists(){
         });
         
         if(currentUser){
+            onChildRemoved(ref(database,'Users/'+currentUser.uid+'/Lists'), (data)=>HandleOnListRemoved(data));
+      
             const fetchLists = async(user)=>{
                 const listsRefID = ref(database, 'Users/'+user.uid+'/Lists');                
                 
                 //first we fetch the ID of the lists this user has access to
                 await onValue(listsRefID, (snapshot1)=>{
-                    const listsPromises = Object.keys(snapshot1.val()).map((listKey)=>{
-                            return new Promise((resolve)=>{
-                            const listRef = ref(database, 'Lists/'+listKey);
-                            onValue(listRef, (snapshot2)=>{
-                                resolve({id: listKey, obj:snapshot2.val(), userListObj: snapshot1.val()[listKey]});
+                    if(!snapshot1.val() || Object.keys(snapshot1.val()).length == 0){
+                        setListsEmpty(true);
+                    }
+                    else{
+                        setListsEmpty(false);
+                        const listsPromises = Object.keys(snapshot1.val()).map((listKey)=>{
+                                return new Promise((resolve)=>{
+                                const listRef = ref(database, 'Lists/'+listKey);
+                                onValue(listRef, (snapshot2)=>{
+                                    resolve({id: listKey, obj:snapshot2.val(), userListObj: snapshot1.val()[listKey]});
+                                });
                             });
-                        });
-                    });
+                        });  
 
-                    Promise.all(listsPromises).then((results=>{
-                        setLists(results);
-                        results.forEach((list)=>{
-                            onChildChanged(ref(database, 'Lists/'+list.id), (data)=>HandleOnListChanged(data));
-                        })
-                        if(results.length > 0)
-                            updateCurrentList(results[0].id, results[0].obj.Name);
-                    }));
+                        Promise.all(listsPromises).then((results=>{
+                            setLists(results);
+                            results.forEach((list)=>{
+                                onChildChanged(ref(database, 'Lists/'+list.id), (data)=>HandleOnListChanged(data));
+                            })
+                            if(results.length > 0)
+                                updateCurrentList(results[0].id, results[0].obj.Name);
+                        }));
+                        
+                    }
                 });
             };
 
@@ -83,8 +94,21 @@ function Lists(){
         }
     }
 
+    const HandleOnListRemoved = (data)=>{
+        const listID = data.key;
+        
+        setLists((prevLists)=>{
+            const lists = [];
+            prevLists.forEach((list)=>{
+                if(list.id !== listID)
+                    lists.push(list);
+            });
+            return lists;
+        });
+    }
+
     const CreateList = ()=>{
-        const shareKey = generateRandomString(5);
+        const shareKey = Helper.generateRandomString(5);
         const listKey = push(child(ref(database, 'Lists'), 'Items')).key;
         const list = {
             Name: 'New List',
@@ -176,7 +200,8 @@ function Lists(){
                     ))}
                 </div>
             </div>
-            {(currentList.id) ? <List data={{database: database, listID: currentList.id, listName:currentList.name}}/> : ''}            
+            {(currentList.id && !areListsEmpty) ? <List data={{database: database, listID: currentList.id, listName:currentList.name}}/> : ''}            
+            {areListsEmpty == true ? <ListsEmpty></ListsEmpty> : ''}
             <ListOptions className='listOptions' data={listOptions}></ListOptions>            
             {(popupImportVisible.isVisible) && <PopupImportList data={popupImportVisible}></PopupImportList>}
             {(showSidebar) && <div onClick={(event)=>EnableMenu(event, false)} className={(showSidebar ? 'showSidebar': 'hideSidebar')+' sidebarBackground'}></div>}

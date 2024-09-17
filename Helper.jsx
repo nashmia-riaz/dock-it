@@ -10,4 +10,8 @@ function generateRandomString(length) {
     return result;
   }
 
-  export default generateRandomString
+const references = {
+  baseURL: '/dock-it'
+};
+
+export default {  generateRandomString, references  }
