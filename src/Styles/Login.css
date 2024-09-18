@@ -65,6 +65,19 @@ body{
     width: 10%;
     transform: rotateZ(15deg);
 }
+.loginForgotPasssword>p{
+    color: rgb(78, 149, 255);
+    font-weight: bold;
+    transition: 0.5s;
+    display: inline-block;
+}
+.loginForgotPasssword>p:hover{
+    cursor: pointer;   
+    transform: scale(1.05, 1.05);
+}
+.success{
+    color: var(--success-color);
+}
 
 @media only screen and (max-width:600px){
     .OnboardingContainer{
